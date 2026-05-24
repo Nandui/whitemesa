@@ -104,6 +104,7 @@ export const seedPhases: ProjectPhase[] = [
         owner: 'lana',
         priority: 'high',
         definitionOfDone: 'Lana can review her recent outputs, detect voice drift or quality issues, and produce a structured reflection note with corrections.',
+        notes: 'lana-reflection skill created. Cron job 6525a9b39461 scheduled for daily 8am.',
       },
       {
         id: 'p2-t5',

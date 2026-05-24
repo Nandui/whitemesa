@@ -1,5 +1,6 @@
 'use client'
 import { useMounted } from '@/lib/hooks'
+import { deriveOverallProgress, derivePhases, getOperatorActionQueue } from '@/lib/selectors'
 import { useLanaStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
@@ -49,13 +50,15 @@ export default function CommandDeck() {
     )
   }
 
-  const activePhase = phases.find((p) => p.status === 'in_progress')
-  const overallProgress = Math.round(phases.reduce((acc, p) => acc + p.progress, 0) / phases.length)
+  const derivedPhases = derivePhases(phases)
+  const actionQueue = getOperatorActionQueue(phases, heartbeats, opportunities)
+  const activePhase = derivedPhases.find((p) => p.derivedStatus === 'in_progress' || p.derivedStatus === 'blocked')
+  const overallProgress = deriveOverallProgress(phases)
   const latestHeartbeat = heartbeats[0]
   const openOpps = opportunities.filter((o) => o.status !== 'won' && o.status !== 'lost')
   const readyOpps = opportunities.filter((o) => o.status === 'ready')
-  const phasesWithBlockers = phases.filter((p) => p.blockers.length > 0 && p.status !== 'completed')
-  const completedPhases = phases.filter((p) => p.status === 'completed').length
+  const phasesWithBlockers = derivedPhases.filter((p) => p.blockers.length > 0 && p.derivedStatus !== 'completed')
+  const completedPhases = derivedPhases.filter((p) => p.derivedStatus === 'completed').length
 
   const alerts: string[] = [
     ...readyOpps.map((o) => `Opportunity pending operator review: ${o.name}`),
@@ -64,7 +67,6 @@ export default function CommandDeck() {
 
   return (
     <div className="px-10 py-10 max-w-[1400px] mx-auto animate-fade-in">
-      {/* System strip */}
       <div className="flex items-center gap-4 mb-10 pb-6 border-b border-lana-border">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-1.5 rounded-full bg-lana-green animate-pulse-slow" />
@@ -84,24 +86,22 @@ export default function CommandDeck() {
         </span>
       </div>
 
-      {/* Page heading */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-lana-text tracking-tight">Command Deck</h1>
         <p className="text-[13px] text-lana-muted mt-1">Operator overview · Lana Hayes synthetic person project</p>
       </div>
 
-      {/* KPI row */}
       <div className="grid grid-cols-5 gap-4 mb-8">
         <KpiCard
           label="Active Phase"
           value={activePhase ? activePhase.name : 'None'}
-          sub={activePhase ? `${activePhase.progress}% complete` : 'All phases complete'}
+          sub={activePhase ? `${activePhase.derivedProgress}% complete · ${activePhase.completedTasks}/${activePhase.totalTasks} tasks done` : 'All phases complete'}
           accent="gold"
         />
         <KpiCard
           label="Overall Progress"
           value={`${overallProgress}%`}
-          sub={`${completedPhases}/${phases.length} phases done`}
+          sub={`${completedPhases}/${derivedPhases.length} phases done · derived from task status`}
           accent="default"
         />
         <KpiCard
@@ -124,7 +124,6 @@ export default function CommandDeck() {
         />
       </div>
 
-      {/* Alerts */}
       {alerts.length > 0 && (
         <div className="mb-8 border border-lana-gold/20 rounded-[3px] bg-lana-gold/[0.04] p-5">
           <p className="font-mono text-[9px] text-lana-gold tracking-[0.2em] uppercase mb-3">Operator Alerts</p>
@@ -139,13 +138,11 @@ export default function CommandDeck() {
         </div>
       )}
 
-      {/* Main grid */}
       <div className="grid grid-cols-[1fr_380px] gap-6">
-        {/* Phase overview */}
         <div>
           <SectionLabel>Phase Overview</SectionLabel>
           <div className="space-y-3">
-            {phases.map((phase) => (
+            {derivedPhases.map((phase) => (
               <div
                 key={phase.id}
                 className="border border-lana-border rounded-[3px] bg-surface-1 px-5 py-4"
@@ -156,37 +153,73 @@ export default function CommandDeck() {
                     <span
                       className={cn(
                         'font-mono text-[8px] tracking-[0.18em] uppercase px-2 py-0.5 rounded-[2px]',
-                        statusBg[phase.status],
-                        statusColor[phase.status]
+                        statusBg[phase.derivedStatus],
+                        statusColor[phase.derivedStatus]
                       )}
                     >
-                      {statusLabel[phase.status]}
+                      {statusLabel[phase.derivedStatus]}
                     </span>
                   </div>
-                  <span className="font-mono text-[11px] text-lana-muted">{phase.progress}%</span>
+                  <span className="font-mono text-[11px] text-lana-muted">{phase.derivedProgress}%</span>
                 </div>
                 <div className="h-[2px] bg-surface-3 rounded-full">
                   <div
                     className={cn(
                       'h-full rounded-full transition-all',
-                      phase.status === 'completed' ? 'bg-lana-green' :
-                      phase.status === 'blocked' ? 'bg-lana-red' :
-                      phase.status === 'in_progress' ? 'bg-lana-gold' : 'bg-surface-3'
+                      phase.derivedStatus === 'completed' ? 'bg-lana-green' :
+                      phase.derivedStatus === 'blocked' ? 'bg-lana-red' :
+                      phase.derivedStatus === 'in_progress' ? 'bg-lana-gold' : 'bg-surface-3'
                     )}
-                    style={{ width: `${phase.progress}%` }}
+                    style={{ width: `${phase.derivedProgress}%` }}
                   />
                 </div>
                 {phase.summary && (
                   <p className="text-[12px] text-lana-muted mt-2 leading-relaxed">{phase.summary}</p>
                 )}
+                <p className="mt-2 font-mono text-[9px] text-lana-muted tracking-[0.16em] uppercase">
+                  {phase.completedTasks}/{phase.totalTasks} tasks complete{phase.nextTask ? ` · next: ${phase.nextTask.title}` : ''}
+                </p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right column */}
         <div className="space-y-6">
-          {/* Latest heartbeat */}
+          <div>
+            <SectionLabel>What To Do Next</SectionLabel>
+            <div className="border border-lana-border rounded-[3px] bg-surface-1 p-5">
+              <p className="text-[12px] text-lana-muted mb-4">
+                This queue is generated from live task states, blockers, opportunity statuses, and heartbeat follow-ups.
+              </p>
+              <div className="space-y-3">
+                {actionQueue.map((item) => (
+                  <div key={item.id} className="border border-lana-border rounded-[2px] px-4 py-3 bg-surface-2">
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <p className="text-[13px] font-medium text-lana-text">{item.title}</p>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className={cn(
+                          'font-mono text-[8px] tracking-[0.16em] uppercase px-2 py-0.5 rounded-[2px]',
+                          item.priority === 'high'
+                            ? 'bg-red-500/10 text-lana-red'
+                            : item.priority === 'medium'
+                              ? 'bg-lana-gold/10 text-lana-gold'
+                              : 'bg-white/5 text-lana-muted'
+                        )}>
+                          {item.priority}
+                        </span>
+                        <span className="font-mono text-[8px] tracking-[0.16em] uppercase text-lana-muted">{item.owner}</span>
+                      </div>
+                    </div>
+                    <p className="text-[12px] text-lana-muted leading-relaxed">{item.detail}</p>
+                    {item.phaseName && (
+                      <p className="mt-2 font-mono text-[9px] text-lana-muted tracking-[0.16em] uppercase">Phase · {item.phaseName}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {latestHeartbeat && (
             <div>
               <SectionLabel>Latest Loop</SectionLabel>
@@ -230,7 +263,6 @@ export default function CommandDeck() {
             </div>
           )}
 
-          {/* Open opportunities preview */}
           <div>
             <SectionLabel>Top Opportunities</SectionLabel>
             <div className="space-y-2">

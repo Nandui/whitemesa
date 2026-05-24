@@ -1,12 +1,15 @@
 export type PhaseStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'
 export type TaskStatus = 'not_started' | 'in_progress' | 'blocked' | 'completed'
 export type TaskOwner = 'operator' | 'lana' | 'shared'
+export type SystemOwner = TaskOwner | 'system'
 export type AutonomyMode = 'contained' | 'supervised' | 'semi_autonomous' | 'open'
 export type OpportunityStatus = 'watching' | 'ready' | 'contacted' | 'negotiating' | 'won' | 'lost'
 export type OpportunityType = 'ugc' | 'brand_deal' | 'affiliate' | 'partnership' | 'other'
 export type MemoryType = 'durable' | 'reflection' | 'research' | 'synthesis'
 export type HeartbeatType = 'reflection' | 'research' | 'opportunity' | 'synthesis'
 export type ImportanceLevel = 'low' | 'medium' | 'high'
+export type PriorityLevel = 'low' | 'medium' | 'high'
+export type FollowUpStatus = 'pending' | 'in_progress' | 'completed'
 
 export interface Task {
   id: string
@@ -14,6 +17,10 @@ export interface Task {
   status: TaskStatus
   owner: TaskOwner
   notes?: string
+  priority?: PriorityLevel
+  dueDate?: string
+  definitionOfDone?: string
+  dependsOn?: string[]
 }
 
 export interface ProjectPhase {
@@ -49,13 +56,21 @@ export interface MemoryEntry {
   createdAt: string
 }
 
+export interface HeartbeatFollowUp {
+  id: string
+  text: string
+  status: FollowUpStatus
+  owner: SystemOwner
+  dueDate?: string
+}
+
 export interface HeartbeatEntry {
   id: string
   runType: HeartbeatType
   createdAt: string
   summary: string
   changes: string[]
-  followUps: string[]
+  followUps: HeartbeatFollowUp[]
   importance: ImportanceLevel
 }
 
@@ -68,6 +83,10 @@ export interface Opportunity {
   estimatedValue?: string
   nextAction: string
   notes: string
+  priority?: PriorityLevel
+  owner?: SystemOwner
+  dueDate?: string
+  lastUpdatedAt?: string
 }
 
 export interface OperatorPolicy {

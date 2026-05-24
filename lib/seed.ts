@@ -238,7 +238,10 @@ export const seedHeartbeats: HeartbeatEntry[] = [
       'Aesthetic coherence score: 8.4/10 (stable)',
       'Memory consolidation: 3 new items promoted to durable',
     ],
-    followUps: ['Recalibrate prose rhythm in next output session', 'Review recent research inputs for domain bias'],
+    followUps: [
+      { id: 'hb1-f1', text: 'Recalibrate prose rhythm in next output session', status: 'pending', owner: 'lana' },
+      { id: 'hb1-f2', text: 'Review recent research inputs for domain bias', status: 'pending', owner: 'shared' },
+    ],
     importance: 'medium',
   },
   {
@@ -253,9 +256,9 @@ export const seedHeartbeats: HeartbeatEntry[] = [
       'Domain coverage: design 40%, architecture 35%, culture 25%',
     ],
     followUps: [
-      'Deep dive: adaptive reuse movement — strong cultural moment',
-      'Draft 2 test posts on parametric design discourse',
-      'Monitor Dezeen and Metropolis for breaking topics',
+      { id: 'hb2-f1', text: 'Deep dive: adaptive reuse movement — strong cultural moment', status: 'in_progress', owner: 'lana' },
+      { id: 'hb2-f2', text: 'Draft 2 test posts on parametric design discourse', status: 'pending', owner: 'lana' },
+      { id: 'hb2-f3', text: 'Monitor Dezeen and Metropolis for breaking topics', status: 'pending', owner: 'system' },
     ],
     importance: 'high',
   },
@@ -271,9 +274,9 @@ export const seedHeartbeats: HeartbeatEntry[] = [
       'New opportunity: Frama Copenhagen — UGC partnership inquiry',
     ],
     followUps: [
-      'Operator review required: Frama Copenhagen UGC brief',
-      'Add Muuto to affiliate watchlist',
-      'Research Kinfolk audience overlap with Lana target demographic',
+      { id: 'hb3-f1', text: 'Operator review required: Frama Copenhagen UGC brief', status: 'pending', owner: 'operator' },
+      { id: 'hb3-f2', text: 'Add Muuto to affiliate watchlist', status: 'completed', owner: 'operator' },
+      { id: 'hb3-f3', text: 'Research Kinfolk audience overlap with Lana target demographic', status: 'pending', owner: 'shared' },
     ],
     importance: 'high',
   },
@@ -290,9 +293,9 @@ export const seedHeartbeats: HeartbeatEntry[] = [
       'Voice consistency: 87% (above 80% target)',
     ],
     followUps: [
-      'Close out research synthesis pipeline task (Phase 2)',
-      'Begin Phase 3 reflection loop implementation',
-      'Schedule Phase 4 planning session with operator',
+      { id: 'hb4-f1', text: 'Close out research synthesis pipeline task (Phase 2)', status: 'in_progress', owner: 'shared' },
+      { id: 'hb4-f2', text: 'Begin Phase 3 reflection loop implementation', status: 'pending', owner: 'lana' },
+      { id: 'hb4-f3', text: 'Schedule Phase 4 planning session with operator', status: 'pending', owner: 'operator' },
     ],
     importance: 'high',
   },
@@ -303,7 +306,9 @@ export const seedHeartbeats: HeartbeatEntry[] = [
     summary:
       'Daily reflection: consolidated post-voice-test learnings. Prose rhythm now more natural. Domain vocabulary expanding into parametric design and material culture.',
     changes: ['Vocabulary expansion: +47 domain terms indexed', 'Prose rhythm score: 8.1/10 (improved from 7.3)'],
-    followUps: ['Continue vocabulary expansion in architecture domain'],
+    followUps: [
+      { id: 'hb5-f1', text: 'Continue vocabulary expansion in architecture domain', status: 'pending', owner: 'lana' },
+    ],
     importance: 'low',
   },
   {
@@ -327,6 +332,10 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.91,
     estimatedValue: '$1,200–2,000',
     nextAction: 'Operator review of UGC brief — awaiting approval to proceed',
+    priority: 'high',
+    owner: 'operator',
+    dueDate: '2026-05-27',
+    lastUpdatedAt: '2026-05-24T10:00:00Z',
     notes:
       'Scandinavian lifestyle brand, very strong aesthetic alignment. Brief requests 3 UGC posts for FW26 collection. Requires operator sign-off before contact.',
   },
@@ -338,6 +347,10 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.87,
     estimatedValue: 'TBD',
     nextAction: 'Research audience overlap and partnership history before approach',
+    priority: 'medium',
+    owner: 'shared',
+    dueDate: '2026-05-31',
+    lastUpdatedAt: '2026-05-22T10:00:00Z',
     notes:
       'Premium editorial brand. Strong cultural fit. Not yet approached. Watch for right moment — ideally around a content series that aligns.',
   },
@@ -349,6 +362,9 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.78,
     estimatedValue: '$200–500/mo at scale',
     nextAction: 'Add to affiliate watchlist; revisit when public presence is established (Phase 4)',
+    priority: 'low',
+    owner: 'operator',
+    lastUpdatedAt: '2026-05-20T09:00:00Z',
     notes: 'Nordic design brand with affiliate program. Good product-content fit. Not ready until Phase 4 audience is built.',
   },
   {
@@ -359,6 +375,9 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.74,
     estimatedValue: 'Credibility / reach',
     nextAction: 'Monitor award cycles; consider editorial angle for Phase 4 content',
+    priority: 'low',
+    owner: 'shared',
+    lastUpdatedAt: '2026-05-18T10:00:00Z',
     notes:
       'Not a direct monetization opportunity — credibility and reach play. Good for positioning Lana in the design discourse.',
   },
@@ -370,6 +389,10 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.71,
     estimatedValue: '$300–800/mo',
     nextAction: 'Awaiting response to affiliate inquiry submitted 2026-05-19',
+    priority: 'medium',
+    owner: 'operator',
+    dueDate: '2026-05-28',
+    lastUpdatedAt: '2026-05-19T16:00:00Z',
     notes: 'Architecture materials marketplace. Strong product-content alignment. Inquiry sent via affiliate portal.',
   },
   {
@@ -380,6 +403,9 @@ export const seedOpportunities: Opportunity[] = [
     fitScore: 0.65,
     estimatedValue: '$3,000–8,000',
     nextAction: 'Requires Phase 4 completion and verified audience metrics before approach',
+    priority: 'low',
+    owner: 'operator',
+    lastUpdatedAt: '2026-05-15T12:00:00Z',
     notes:
       'Aspirational target. Major brand deal potential but requires established credibility first. Long-term play.',
   },

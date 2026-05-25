@@ -6,25 +6,24 @@ Web UI for managing Lana's skills, memory files, Mem0 memories, and profile conf
 
 ```bash
 pip install -r requirements.txt
-python app.py
+uvicorn app:app --reload --port 3001
 # → http://localhost:3001
 ```
 
-Or with uvicorn:
+Or directly:
 ```bash
-uvicorn app:app --reload --port 3001
+python app.py
 ```
 
 ## Deploy
 
-Push to GitHub → Vercel auto-deploys from `main`.
+Push to GitHub → Vercel auto-deploys from `main` (configured via `vercel.json`).
 
 ## Structure
 
 ```
-├── api/index.py        # Vercel serverless entry
-├── app.py              # FastAPI backend
+├── app.py              # FastAPI backend + Vercel entry point
 ├── static/index.html   # Single-page frontend
-├── vercel.json         # Vercel config
+├── vercel.json         # Vercel Python build config
 └── requirements.txt    # Python dependencies
 ```

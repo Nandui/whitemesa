@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lana Control Panel</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #1f6feb;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --pink: #ff7b9c;
+    --radius: 8px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+  }
+  .sidebar h1 {
+    font-size: 18px;
+    padding: 0 16px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sidebar h1 .badge {
+    font-size: 11px;
+    background: var(--purple);
+    color: #fff;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .nav-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text2);
+    border-left: 3px solid transparent;
+    transition: 0.15s;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    color: var(--text);
+    border-left-color: var(--accent);
+    background: rgba(88,166,255,0.08);
+  }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .toolbar {
+    padding: 12px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+  }
+  .toolbar h2 { font-size: 16px; font-weight: 600; }
+  .toolbar .count {
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--surface2);
+    padding: 2px 10px;
+    border-radius: 10px;
+  }
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* ── Buttons ── */
+  button {
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  button:hover { background: #21262d; border-color: var(--text2); }
+  button.primary { background: var(--accent2); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: var(--accent); }
+  button.danger { border-color: var(--red); color: var(--red); }
+  button.danger:hover { background: rgba(248,81,73,0.15); }
+  button.green { border-color: var(--green); color: var(--green); }
+  button.green:hover { background: rgba(63,185,80,0.15); }
+  input, textarea, select {
+    font-family: var(--font);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    outline: none;
+    font-size: 13px;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+  textarea {
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .card-subtitle {
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .card-actions { display: flex; gap: 6px; }
+
+  /* ── Lists ── */
+  .file-list {
+    display: grid;
+    gap: 6px;
+  }
+  .file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: 0.12s;
+  }
+  .file-item:hover { background: #21262d; }
+  .file-item .name { font-size: 14px; font-weight: 500; }
+  .file-item .meta { font-size: 12px; color: var(--text2); }
+  .file-item .tag {
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 8px;
+    background: var(--accent2);
+    color: #fff;
+  }
+  .file-item .tag.purple { background: var(--purple); }
+  .file-item .tag.green { background: var(--green); }
+  .file-item .tag.orange { background: var(--orange); }
+
+  /* ── Editor ── */
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .editor-panel textarea {
+    width: 100%;
+    min-height: 400px;
+    padding: 14px;
+    border-radius: var(--radius);
+    tab-size: 2;
+  }
+  .editor-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ── Search ── */
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .search-bar input { flex: 1; }
+
+  /* ── Mem0 ── */
+  .mem0-item {
+    padding: 12px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    border-left: 3px solid var(--accent);
+  }
+  .mem0-item .m-text { font-size: 13px; line-height: 1.5; }
+  .mem0-item .m-meta {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 6px;
+    display: flex;
+    gap: 12px;
+  }
+  .mem0-item .m-score {
+    color: var(--green);
+    font-weight: 600;
+  }
+
+  /* ── Structure ── */
+  .tree-item {
+    padding: 4px 0;
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+  .tree-item .tree-icon { margin-right: 6px; }
+  .tree-item .tree-path { color: var(--text2); }
+
+  /* ── Status ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+
+  /* ── Loading ── */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text2);
+    font-size: 14px;
+  }
+  .loading .spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .sidebar { width: 60px; min-width: 60px; }
+    .sidebar h1, .nav-item span { display: none; }
+    .nav-item { justify-content: center; padding: 12px; }
+    .nav-icon { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h1>👩🏻 Lana <span class="badge">v1</span></h1>
+  <div class="nav-item active" data-tab="skills">
+    <span class="nav-icon">📦</span><span>Skills</span>
+  </div>
+  <div class="nav-item" data-tab="memory">
+    <span class="nav-icon">📝</span><span>Memory Files</span>
+  </div>
+  <div class="nav-item" data-tab="profile">
+    <span class="nav-icon">⚙️</span><span>Profile Files</span>
+  </div>
+  <div class="nav-item" data-tab="mem0">
+    <span class="nav-icon">🧠</span><span>Mem0 Memory</span>
+  </div>
+  <div class="nav-item" data-tab="structure">
+    <span class="nav-icon">📂</span><span>Structure</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <h2 id="tab-title">Skills</h2>
+    <span class="count" id="tab-count"></span>
+  </div>
+  <div class="content" id="content">
+    <div class="loading"><span class="spinner"></span>Loading...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──
+let currentTab = 'skills';
+let currentData = null;
+
+// ── Navigation ──
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    currentTab = el.dataset.tab;
+    loadTab(currentTab);
+  });
+});
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._hide);
+  t._hide = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── API helpers ──
+async function api(url, opts = {}) {
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+// ── Loading ──
+function showLoading() {
+  document.getElementById('content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
+}
+
+// ── Editor view ──
+function showEditor(title, content, saveFn) {
+  const c = document.getElementById('content');
+  c.innerHTML = `
+    <div class="editor-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="font-size:14px;font-weight:500;color:var(--accent);font-family:var(--mono)">${escapeHtml(title)}</h3>
+        <div>
+          <button onclick="loadTab('${currentTab}')" style="margin-right:6px">← Back</button>
+          <button class="primary" onclick="saveEditor()">💾 Save</button>
+        </div>
+      </div>
+      <textarea id="editor" spellcheck="false">${escapeHtml(content)}</textarea>
+      <div id="save-status" style="font-size:12px;color:var(--text2)"></div>
+    </div>
+  `;
+  window._saveFn = saveFn;
+}
+
+window.saveEditor = async function() {
+  const text = document.getElementById('editor').value;
+  const status = document.getElementById('save-status');
+  status.textContent = 'Saving...';
+  try {
+    const result = await window._saveFn(text);
+    if (result.error) {
+      status.textContent = '❌ ' + result.error;
+      toast('Save failed: ' + result.error, 'error');
+    } else {
+      status.textContent = '✅ Saved (' + result.size + ' bytes)';
+      toast('Saved!');
+    }
+  } catch (e) {
+    status.textContent = '❌ ' + e.message;
+    toast('Save failed', 'error');
+  }
+};
+
+// ── Escape HTML ──
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fileSize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(1) + ' MB';
+}
+
+// ── Tab Loaders ──
+
+async function loadTab(tab) {
+  showLoading();
+  const title = document.getElementById('tab-title');
+  const count = document.getElementById('tab-count');
+  const c = document.getElementById('content');
+
+  switch(tab) {
+    case 'skills': {
+      title.textContent = 'Skills';
+      const data = await api('/api/skills');
+      count.textContent = data.count + ' skills';
+      if (data.error) { c.innerHTML = '<div class="card">Error: ' + data.error + '</div>'; return; }
+      let html = `<div class="file-list">`;
+      for (const skill of data.skills) {
+        const name = skill.name;
+        const dir = skill.dir;
+        html += `<div class="file-item" onclick="openSkill('${escapeHtml(dir)}')">
+          <div>
+            <div class="name">📦 ${escapeHtml(name)}</div>
+            <div class="meta">${escapeHtml(skill.path)}</div>
+          </div>
+          <div class="tag">SKILL.md</div>
+        </div>`;
+      }
+      html += `</div>`;
+      if (data.skills.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No skills found</div>';
+      c.innerHTML = html;
+      break;
+    }
+
+    case 'memory': {
+      title.textContent = 'Memory Files';
+      const data = await api('/api/memory-files');
+      count.textContent = data.count + ' files';
+      let html = '<div class="file-list">';
+      for (const f of data.files) {
+        html += `<div class="file-item" onclick="openMemoryFile('${escapeHtml(f.path)}')">
+          <div>
+            <div class="name">📄 ${escapeHtml(f.name)}</div>
+            <div class="meta">${escapeHtml(f.path)} · ${fileSize(f.size)}</div>
+          </div>
+          <div class="tag purple">.md</div>
+        </div>`;
+      }
+      html += '</div>';
+      if (data.files.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No memory files found at ~/lana_memory/memory/</div>';
+      c.innerHTML = html;
+      break;
+    }
+
+    case 'profile': {
+      title.textContent = 'Profile Files';
+      const data = await api('/api/profile-files');
+      count.textContent = data.count + ' files';
+      let html = '<div class="file-list">';
+      for (const f of data.files) {
+        const tagColor = f.name.endsWith('.md') ? 'purple' : f.name.endsWith('.yaml') ? 'orange' : '';
+        html += `<div class="file-item" onclick="openProfileFile('${escapeHtml(f.path)}')">
+          <div>
+            <div class="name">⚙️ ${escapeHtml(f.name)}</div>
+            <div class="meta">${escapeHtml(f.path)} · ${fileSize(f.size)}</div>
+          </div>
+          <div class="tag ${tagColor}">${f.name.split('.').pop()}</div>
+        </div>`;
+      }
+      html += '</div>';
+      if (data.files.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No profile files found</div>';
+      c.innerHTML = html;
+      break;
+    }
+
+    case 'mem0': {
+      title.textContent = 'Mem0 Memory';
+      const data = await api('/api/mem0/recent');
+      count.textContent = '';
+      let html = `
+        <div class="search-bar">
+          <input id="mem0-search" placeholder="Search memories..." onkeydown="if(event.key==='Enter')searchMem0()">
+          <button onclick="searchMem0()">🔍 Search</button>
+          <button onclick="loadRecentMem0()" class="green">📋 Recent</button>
+          <button onclick="showAddMem0()" class="primary">➕ Add</button>
+        </div>
+        <div id="mem0-results"></div>
+      `;
+      c.innerHTML = html;
+      renderMem0Results(data);
+      break;
+    }
+
+    case 'structure': {
+      title.textContent = 'Structure';
+      count.textContent = '';
+      const data = await api('/api/structure');
+      let html = `
+        <div class="card" style="font-family:var(--mono);font-size:13px;line-height:1.8">
+          <div class="tree-item">📁 <strong>lana_memory/</strong> <span class="tree-path">${escapeHtml(data.lana_memory_dir)}</span></div>
+          <div class="tree-item" style="padding-left:20px">📁 memory/ <span class="tree-path">${escapeHtml(data.memory_files_dir)}</span></div>
+          <div class="tree-item" style="padding-left:20px">📁 chroma_db/ <span class="tree-path">${escapeHtml(data.mem0_dir)}</span></div>
+          <div class="tree-item" style="padding-left:20px">🐍 lana_memory.py</div>
+          <div style="height:8px"></div>
+          <div class="tree-item">📁 <strong>profile/</strong> <span class="tree-path">${escapeHtml(data.profile_dir)}</span></div>
+          <div class="tree-item" style="padding-left:20px">📄 SOUL.md</div>
+          <div class="tree-item" style="padding-left:20px">⚙️ config.yaml</div>
+          <div class="tree-item" style="padding-left:20px">📄 memory_prefill.md</div>
+          <div style="height:8px"></div>
+          <div class="tree-item">📁 <strong>skills/</strong> <span class="tree-path">${escapeHtml(data.skills_dir)}</span></div>
+          <div style="height:16px"></div>
+          <div style="color:var(--text2);font-family:var(--font);font-size:12px">
+            💡 Click any tab to browse and edit files
+          </div>
+        </div>
+      `;
+      c.innerHTML = html;
+      break;
+    }
+  }
+}
+
+// ── Skill opener ──
+window.openSkill = async function(dir) {
+  showLoading();
+  const data = await api('/api/skills/read?path=' + encodeURIComponent(dir + '/SKILL.md'));
+  if (data.error) {
+    const c = document.getElementById('content');
+    c.innerHTML = '<div class="card">Error: ' + data.error + '</div>';
+    return;
+  }
+  const title = dir.split('/').pop();
+  document.getElementById('tab-title').textContent = 'Editing: ' + title;
+  document.getElementById('tab-count').textContent = '';
+  showEditor(dir + '/SKILL.md', data.content, async (text) => {
+    return await api('/api/skills/save?path=' + encodeURIComponent(dir + '/SKILL.md'), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: text})
+    });
+  });
+};
+
+// ── Memory file opener ──
+window.openMemoryFile = async function(path) {
+  showLoading();
+  const data = await api('/api/memory-files/read?path=' + encodeURIComponent(path));
+  if (data.error) {
+    document.getElementById('content').innerHTML = '<div class="card">Error: ' + data.error + '</div>';
+    return;
+  }
+  const name = path.split('/').pop();
+  document.getElementById('tab-title').textContent = 'Editing: ' + name;
+  document.getElementById('tab-count').textContent = '';
+  showEditor(name, data.content, async (text) => {
+    return await api('/api/memory-files/save?path=' + encodeURIComponent(path), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: text})
+    });
+  });
+};
+
+// ── Profile file opener ──
+window.openProfileFile = async function(path) {
+  showLoading();
+  const data = await api('/api/profile-files/read?path=' + encodeURIComponent(path));
+  if (data.error) {
+    document.getElementById('content').innerHTML = '<div class="card">Error: ' + data.error + '</div>';
+    return;
+  }
+  const name = path.split('/').pop();
+  document.getElementById('tab-title').textContent = 'Editing: ' + name;
+  document.getElementById('tab-count').textContent = '';
+  showEditor(name, data.content, async (text) => {
+    return await api('/api/profile-files/save?path=' + encodeURIComponent(path), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: text})
+    });
+  });
+};
+
+// ── Mem0 ──
+function renderMem0Results(data) {
+  const el = document.getElementById('mem0-results');
+  if (!el) return;
+
+  if (data.error) {
+    el.innerHTML = '<div class="card" style="color:var(--red)">Error: ' + escapeHtml(data.error) + '</div>';
+    return;
+  }
+
+  let items = [];
+  if (Array.isArray(data)) items = data;
+  else if (data.results) items = data.results;
+  else if (data.output) {
+    el.innerHTML = '<div class="card"><pre style="font-family:var(--mono);font-size:12px">' + escapeHtml(data.output) + '</pre></div>';
+    return;
+  }
+
+  if (items.length === 0) {
+    el.innerHTML = '<div class="card" style="text-align:center;padding:20px;color:var(--text2)">No memories found</div>';
+    return;
+  }
+
+  let html = '';
+  for (const item of items) {
+    const memory = item.memory || item.text || JSON.stringify(item);
+    const score = item.score ? parseFloat(item.score).toFixed(3) : null;
+    const date = item.created_at ? new Date(item.created_at).toLocaleString() : '';
+    html += `<div class="mem0-item">
+      <div class="m-text">${escapeHtml(memory)}</div>
+      <div class="m-meta">
+        ${score ? `<span class="m-score">Score: ${score}</span>` : ''}
+        ${date ? `<span>${date}</span>` : ''}
+        ${item.id ? `<span style="color:var(--text2)">${item.id.slice(0,8)}...</span>` : ''}
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+window.searchMem0 = async function() {
+  const q = document.getElementById('mem0-search').value;
+  const data = await api('/api/mem0/search?q=' + encodeURIComponent(q));
+  renderMem0Results(data);
+};
+
+window.loadRecentMem0 = async function() {
+  document.getElementById('mem0-search').value = '';
+  const data = await api('/api/mem0/recent');
+  renderMem0Results(data);
+};
+
+window.showAddMem0 = function() {
+  const text = prompt('Enter a memory to save:');
+  if (!text) return;
+  api('/api/mem0/add', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text})
+  }).then(data => {
+    if (data.error) toast('Error: ' + data.error, 'error');
+    else {
+      toast('Memory added!');
+      loadRecentMem0();
+    }
+  });
+};
+
+// ── Init ──
+loadTab('skills');
+</script>
+</body>
+</html>

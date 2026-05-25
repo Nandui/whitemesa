@@ -5,679 +5,1025 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lana Control Panel</title>
 <style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #1c2333;
-    --border: #30363d;
-    --text: #e6edf3;
-    --text2: #8b949e;
-    --accent: #58a6ff;
-    --accent2: #1f6feb;
-    --green: #3fb950;
-    --orange: #d29922;
-    --red: #f85149;
-    --purple: #bc8cff;
-    --pink: #ff7b9c;
-    --radius: 8px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: var(--font);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-  }
-  ::-webkit-scrollbar { width: 8px; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface2: #1c2333;
+  --surface3: #21262d;
+  --border: #30363d;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --accent: #58a6ff;
+  --accent-dim: #1f6feb;
+  --green: #3fb950;
+  --orange: #d29922;
+  --red: #f85149;
+  --purple: #bc8cff;
+  --radius: 7px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
 
-  /* ── Sidebar ── */
-  .sidebar {
-    width: 220px;
-    min-width: 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    padding: 16px 0;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-  }
-  .sidebar h1 {
-    font-size: 18px;
-    padding: 0 16px 16px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .sidebar h1 .badge {
-    font-size: 11px;
-    background: var(--purple);
-    color: #fff;
-    padding: 1px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
-  .nav-item {
-    padding: 10px 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: var(--text2);
-    border-left: 3px solid transparent;
-    transition: 0.15s;
-  }
-  .nav-item:hover { background: var(--surface2); color: var(--text); }
-  .nav-item.active {
-    color: var(--text);
-    border-left-color: var(--accent);
-    background: rgba(88,166,255,0.08);
-  }
-  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
-  /* ── Main ── */
-  .main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .toolbar {
-    padding: 12px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-height: 52px;
-  }
-  .toolbar h2 { font-size: 16px; font-weight: 600; }
-  .toolbar .count {
-    font-size: 12px;
-    color: var(--text2);
-    background: var(--surface2);
-    padding: 2px 10px;
-    border-radius: 10px;
-  }
-  .content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 24px;
-  }
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.sidebar-header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.badge {
+  font-size: 10px;
+  background: linear-gradient(135deg, #7c3aed, var(--accent));
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.nav-section { padding: 6px 0; }
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text2);
+  padding: 4px 16px 6px;
+}
+.nav-item {
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--text2);
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s;
+  user-select: none;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active {
+  color: var(--text);
+  border-left-color: var(--accent);
+  background: rgba(88,166,255,0.07);
+}
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-text { flex: 1; }
+.nav-count {
+  font-size: 10px;
+  background: var(--surface3);
+  color: var(--text2);
+  padding: 1px 6px;
+  border-radius: 8px;
+  min-width: 18px;
+  text-align: center;
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
 
-  /* ── Buttons ── */
-  button {
-    font-family: var(--font);
-    font-size: 13px;
-    padding: 6px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    color: var(--text);
-    cursor: pointer;
-    transition: 0.15s;
-  }
-  button:hover { background: #21262d; border-color: var(--text2); }
-  button.primary { background: var(--accent2); border-color: var(--accent); color: #fff; }
-  button.primary:hover { background: var(--accent); }
-  button.danger { border-color: var(--red); color: var(--red); }
-  button.danger:hover { background: rgba(248,81,73,0.15); }
-  button.green { border-color: var(--green); color: var(--green); }
-  button.green:hover { background: rgba(63,185,80,0.15); }
-  input, textarea, select {
-    font-family: var(--font);
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: var(--radius);
-    outline: none;
-    font-size: 13px;
-  }
-  input:focus, textarea:focus, select:focus {
-    border-color: var(--accent);
-  }
-  textarea {
-    font-family: var(--mono);
-    font-size: 13px;
-    line-height: 1.5;
-    resize: vertical;
-  }
+/* ── Main ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+.toolbar {
+  padding: 9px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  flex-shrink: 0;
+}
+.toolbar-back {
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
+}
+.toolbar-back:hover { color: var(--text); background: var(--surface3); }
+.toolbar-back.visible { display: flex; }
+.toolbar h2 {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toolbar-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0; }
 
-  /* ── Cards ── */
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-  }
-  .card-title {
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .card-subtitle {
-    font-size: 12px;
-    color: var(--text2);
-  }
-  .card-actions { display: flex; gap: 6px; }
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
 
-  /* ── Lists ── */
-  .file-list {
-    display: grid;
-    gap: 6px;
-  }
-  .file-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    background: var(--surface2);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: 0.12s;
-  }
-  .file-item:hover { background: #21262d; }
-  .file-item .name { font-size: 14px; font-weight: 500; }
-  .file-item .meta { font-size: 12px; color: var(--text2); }
-  .file-item .tag {
-    font-size: 11px;
-    padding: 1px 8px;
-    border-radius: 8px;
-    background: var(--accent2);
-    color: #fff;
-  }
-  .file-item .tag.purple { background: var(--purple); }
-  .file-item .tag.green { background: var(--green); }
-  .file-item .tag.orange { background: var(--orange); }
+/* ── Buttons ── */
+button {
+  font-family: var(--font);
+  font-size: 12.5px;
+  padding: 6px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+button:hover { background: var(--surface3); border-color: #484f58; }
+button:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+button.primary { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+button.primary:hover { background: #2a7dd2; }
+button.success { background: rgba(63,185,80,0.12); border-color: var(--green); color: var(--green); }
+button.success:hover { background: rgba(63,185,80,0.2); }
+button.danger { border-color: var(--red); color: var(--red); }
+button.danger:hover { background: rgba(248,81,73,0.1); }
+button.sm { padding: 4px 10px; font-size: 11.5px; }
 
-  /* ── Editor ── */
-  .editor-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-  .editor-panel textarea {
-    width: 100%;
-    min-height: 400px;
-    padding: 14px;
-    border-radius: var(--radius);
-    tab-size: 2;
-  }
-  .editor-actions {
-    display: flex;
-    gap: 8px;
-  }
+input, textarea, select {
+  font-family: var(--font);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 11px;
+  border-radius: var(--radius);
+  outline: none;
+  font-size: 13px;
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(88,166,255,0.1);
+}
+input::placeholder, textarea::placeholder { color: var(--text2); }
+textarea {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  resize: vertical;
+}
 
-  /* ── Search ── */
-  .search-bar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-  .search-bar input { flex: 1; }
+/* ── Search bar ── */
+.search-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.search-bar input { flex: 1; }
 
-  /* ── Mem0 ── */
-  .mem0-item {
-    padding: 12px 14px;
-    background: var(--surface2);
-    border-radius: var(--radius);
-    margin-bottom: 6px;
-    border-left: 3px solid var(--accent);
-  }
-  .mem0-item .m-text { font-size: 13px; line-height: 1.5; }
-  .mem0-item .m-meta {
-    font-size: 11px;
-    color: var(--text2);
-    margin-top: 6px;
-    display: flex;
-    gap: 12px;
-  }
-  .mem0-item .m-score {
-    color: var(--green);
-    font-weight: 600;
-  }
+/* ── File list ── */
+.file-list { display: flex; flex-direction: column; gap: 4px; }
+.file-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.file-item:hover { background: var(--surface2); border-color: #484f58; }
+.file-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+.file-info { flex: 1; min-width: 0; }
+.file-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-meta {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.file-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.badge-blue  { background: rgba(88,166,255,0.13); color: var(--accent); }
+.badge-purple{ background: rgba(188,140,255,0.13); color: var(--purple); }
+.badge-orange{ background: rgba(210,153,34,0.13);  color: var(--orange); }
+.badge-green { background: rgba(63,185,80,0.13);   color: var(--green); }
 
-  /* ── Structure ── */
-  .tree-item {
-    padding: 4px 0;
-    font-size: 13px;
-    font-family: var(--mono);
-  }
-  .tree-item .tree-icon { margin-right: 6px; }
-  .tree-item .tree-path { color: var(--text2); }
+/* ── Editor ── */
+.editor-wrap {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px - 36px);
+  gap: 0;
+}
+.editor-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.editor-filename {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.editor-dirty { font-size: 11px; color: var(--orange); display: none; }
+.editor-dirty.on { display: inline; }
+.editor-textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 300px;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  resize: none;
+  tab-size: 2;
+  outline: none;
+  transition: border-color 0.1s;
+}
+.editor-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.08); }
+.editor-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.editor-status { color: var(--text2); flex: 1; }
+.save-btn { min-width: 92px; justify-content: center; }
 
-  /* ── Status ── */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    z-index: 999;
-    opacity: 0;
-    transform: translateY(10px);
-    transition: 0.3s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.success { border-color: var(--green); }
-  .toast.error { border-color: var(--red); }
+/* ── Mem0 ── */
+.mem0-add-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text2);
+  margin-bottom: 8px;
+}
+.mem0-add-form textarea { width: 100%; min-height: 68px; margin-bottom: 9px; }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
 
-  /* ── Loading ── */
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--text2);
-    font-size: 14px;
-  }
-  .loading .spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+.mem0-items { display: flex; flex-direction: column; gap: 6px; }
+.mem0-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+.mem0-item.search-result { border-left-color: var(--purple); }
+.mem0-text { font-size: 13px; line-height: 1.55; }
+.mem0-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 7px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.mem0-score { color: var(--green); font-weight: 600; }
+.mem0-id { font-family: var(--mono); }
 
-  /* ── Responsive ── */
-  @media (max-width: 768px) {
-    .sidebar { width: 60px; min-width: 60px; }
-    .sidebar h1, .nav-item span { display: none; }
-    .nav-item { justify-content: center; padding: 12px; }
-    .nav-icon { font-size: 20px; }
-  }
+/* ── Structure ── */
+.tree { font-family: var(--mono); font-size: 12.5px; }
+.tree-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  line-height: 1.6;
+}
+.tree-row.indent1 { padding-left: 22px; }
+.tree-row.indent2 { padding-left: 44px; }
+.tree-name { font-weight: 500; color: var(--text); }
+.tree-name.dir { color: var(--accent); }
+.tree-path { font-size: 11px; color: var(--text2); word-break: break-all; }
+.path-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.path-table td { padding: 3px 0; vertical-align: top; }
+.path-table td:first-child { color: var(--text2); white-space: nowrap; padding-right: 14px; }
+.path-table td:last-child { font-family: var(--mono); word-break: break-all; }
+
+/* ── Misc ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+}
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.empty-state {
+  text-align: center;
+  padding: 52px 24px;
+  color: var(--text2);
+}
+.empty-icon { font-size: 34px; margin-bottom: 10px; }
+.empty-state p { font-size: 13.5px; }
+.error-banner {
+  background: rgba(248,81,73,0.07);
+  border: 1px solid rgba(248,81,73,0.3);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  color: var(--red);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.error-banner .ml-auto { margin-left: auto; }
+
+/* ── Loading ── */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 52px;
+  color: var(--text2);
+  font-size: 13px;
+  gap: 10px;
+}
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  flex-shrink: 0;
+}
+.spinner.sm { width: 12px; height: 12px; border-width: 1.5px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 9px 16px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+  max-width: 300px;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.success { border-color: var(--green); color: var(--green); }
+.toast.error   { border-color: var(--red);   color: var(--red); }
+.toast.info    { border-color: var(--accent); color: var(--accent); }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .sidebar { width: 52px; min-width: 52px; }
+  .sidebar-header h1, .nav-text, .nav-count, .nav-label, .sidebar-footer { display: none; }
+  .nav-item { justify-content: center; padding: 12px 8px; }
+  .nav-icon { font-size: 17px; }
+  .content { padding: 12px; }
+}
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <h1>👩🏻 Lana <span class="badge">v1</span></h1>
-  <div class="nav-item active" data-tab="skills">
-    <span class="nav-icon">📦</span><span>Skills</span>
+  <div class="sidebar-header">
+    <span style="font-size:20px;line-height:1">👩🏻</span>
+    <h1>Lana</h1>
+    <span class="badge">v2</span>
   </div>
-  <div class="nav-item" data-tab="memory">
-    <span class="nav-icon">📝</span><span>Memory Files</span>
-  </div>
-  <div class="nav-item" data-tab="profile">
-    <span class="nav-icon">⚙️</span><span>Profile Files</span>
-  </div>
-  <div class="nav-item" data-tab="mem0">
-    <span class="nav-icon">🧠</span><span>Mem0 Memory</span>
-  </div>
-  <div class="nav-item" data-tab="structure">
-    <span class="nav-icon">📂</span><span>Structure</span>
-  </div>
+  <nav class="nav-section">
+    <div class="nav-label">Files</div>
+    <div class="nav-item active" data-tab="skills">
+      <span class="nav-icon">📦</span>
+      <span class="nav-text">Skills</span>
+      <span class="nav-count" id="nc-skills">–</span>
+    </div>
+    <div class="nav-item" data-tab="memory">
+      <span class="nav-icon">📝</span>
+      <span class="nav-text">Memory</span>
+      <span class="nav-count" id="nc-memory">–</span>
+    </div>
+    <div class="nav-item" data-tab="profile">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-text">Profile</span>
+      <span class="nav-count" id="nc-profile">–</span>
+    </div>
+  </nav>
+  <nav class="nav-section">
+    <div class="nav-label">Memory</div>
+    <div class="nav-item" data-tab="mem0">
+      <span class="nav-icon">🧠</span>
+      <span class="nav-text">Mem0</span>
+    </div>
+  </nav>
+  <nav class="nav-section">
+    <div class="nav-label">System</div>
+    <div class="nav-item" data-tab="structure">
+      <span class="nav-icon">📂</span>
+      <span class="nav-text">Structure</span>
+    </div>
+  </nav>
+  <div class="sidebar-footer">localhost:3001</div>
 </div>
 
 <div class="main">
   <div class="toolbar">
-    <h2 id="tab-title">Skills</h2>
-    <span class="count" id="tab-count"></span>
+    <button class="toolbar-back" id="back-btn">← Back</button>
+    <h2 id="toolbar-title">Skills</h2>
+    <div class="toolbar-actions" id="toolbar-actions"></div>
   </div>
   <div class="content" id="content">
-    <div class="loading"><span class="spinner"></span>Loading...</div>
+    <div class="loading"><span class="spinner"></span>Loading…</div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ── State ──
-let currentTab = 'skills';
-let currentData = null;
+// ── State ──────────────────────────────────────────────────────
+const S = {
+  tab: 'skills',
+  inEditor: false,
+  saveFn: null,
+  skillsCache: null,
+};
 
-// ── Navigation ──
-document.querySelectorAll('.nav-item').forEach(el => {
+// ── Utilities ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function fsize(n) {
+  if (n < 1024) return n + 'B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + 'KB';
+  return (n / 1048576).toFixed(1) + 'MB';
+}
+function setLoading() {
+  $('content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
+}
+function toast(msg, type = 'success') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+async function apiFetch(url, opts = {}) {
+  const r = await fetch(url, opts);
+  if (!r.ok) {
+    const txt = await r.text().catch(() => r.statusText);
+    throw new Error('HTTP ' + r.status + ': ' + txt);
+  }
+  return r.json();
+}
+
+function setToolbar(title, showBack, actionsHtml = '') {
+  $('toolbar-title').textContent = title;
+  const back = $('back-btn');
+  showBack ? back.classList.add('visible') : back.classList.remove('visible');
+  $('toolbar-actions').innerHTML = actionsHtml;
+}
+
+function errorHtml(msg, retryKey) {
+  return `<div class="error-banner">⚠️ ${esc(msg)}
+    <button class="sm ml-auto" onclick="${retryKey}()">Retry</button></div>`;
+}
+
+// ── Navigation ─────────────────────────────────────────────────
+document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
   el.addEventListener('click', () => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     el.classList.add('active');
-    currentTab = el.dataset.tab;
-    loadTab(currentTab);
+    S.tab = el.dataset.tab;
+    S.inEditor = false;
+    loadTab(S.tab);
   });
 });
 
-// ── Toast ──
-function toast(msg, type = 'success') {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(t._hide);
-  t._hide = setTimeout(() => t.classList.remove('show'), 2500);
+$('back-btn').addEventListener('click', () => {
+  S.inEditor = false;
+  loadTab(S.tab);
+});
+
+// ── Tab loader ─────────────────────────────────────────────────
+async function loadTab(tab) {
+  setLoading();
+  try {
+    if (tab === 'skills')    await loadSkills();
+    else if (tab === 'memory')    await loadMemory();
+    else if (tab === 'profile')   await loadProfile();
+    else if (tab === 'mem0')      await loadMem0();
+    else if (tab === 'structure') await loadStructure();
+  } catch (e) {
+    $('content').innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+      <button class="sm ml-auto" onclick="loadTab('${S.tab}')">Retry</button></div>`;
+  }
 }
 
-// ── API helpers ──
-async function api(url, opts = {}) {
-  const res = await fetch(url, opts);
-  return res.json();
+// ── Skills ────────────────────────────────────────────────────
+async function loadSkills() {
+  const data = await apiFetch('/api/skills');
+  S.skillsCache = data.skills || [];
+  $('nc-skills').textContent = data.count || 0;
+  setToolbar('Skills', false,
+    `<input id="skill-filter" style="width:190px" placeholder="Filter skills…" oninput="filterSkills(this.value)">`
+  );
+  renderSkills(S.skillsCache, '');
 }
 
-// ── Loading ──
-function showLoading() {
-  document.getElementById('content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading...</div>';
-}
+function renderSkills(skills, q) {
+  const list = q
+    ? skills.filter(s => s.name.toLowerCase().includes(q.toLowerCase()))
+    : skills;
 
-// ── Editor view ──
-function showEditor(title, content, saveFn) {
-  const c = document.getElementById('content');
-  c.innerHTML = `
-    <div class="editor-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 style="font-size:14px;font-weight:500;color:var(--accent);font-family:var(--mono)">${escapeHtml(title)}</h3>
-        <div>
-          <button onclick="loadTab('${currentTab}')" style="margin-right:6px">← Back</button>
-          <button class="primary" onclick="saveEditor()">💾 Save</button>
-        </div>
+  if (list.length === 0) {
+    $('content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <p>${q ? 'No skills match <em>' + esc(q) + '</em>' : 'No skills found in <code>~/.hermes/skills/</code>'}</p>
+    </div>`;
+    return;
+  }
+
+  let html = '<div class="file-list">';
+  for (const sk of list) {
+    const parts = sk.name.split('/');
+    const leaf = parts[parts.length - 1];
+    const cat  = parts.length > 1 ? parts[0] : '';
+    html += `<div class="file-item" onclick="openSkill(${JSON.stringify(sk.path)})">
+      <span class="file-icon">📦</span>
+      <div class="file-info">
+        <div class="file-name">${esc(leaf)}</div>
+        <div class="file-meta">${cat ? esc(cat) + ' · ' : ''}${esc(sk.path)}</div>
       </div>
-      <textarea id="editor" spellcheck="false">${escapeHtml(content)}</textarea>
-      <div id="save-status" style="font-size:12px;color:var(--text2)"></div>
+      <span class="file-badge badge-blue">skill</span>
+    </div>`;
+  }
+  html += '</div>';
+  $('content').innerHTML = html;
+}
+
+window.filterSkills = function(q) {
+  if (!S.skillsCache) return;
+  renderSkills(S.skillsCache, q);
+  // restore focus + value
+  const el = $('skill-filter');
+  if (el) { el.value = q; el.focus(); }
+};
+
+async function openSkill(path) {
+  setLoading();
+  let data;
+  try { data = await apiFetch('/api/skills/read?path=' + encodeURIComponent(path)); }
+  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadSkills'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadSkills'); return; }
+  const name = path.split('/').pop();
+  showEditor(path, name, data.content, async txt =>
+    apiFetch('/api/skills/save?path=' + encodeURIComponent(path), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: txt})
+    })
+  );
+}
+
+// ── Memory Files ──────────────────────────────────────────────
+async function loadMemory() {
+  const data = await apiFetch('/api/memory-files');
+  $('nc-memory').textContent = data.count || 0;
+  setToolbar('Memory Files', false, '');
+  if (!data.files || data.files.length === 0) {
+    $('content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div><p>No files found at <code>~/lana_memory/memory/</code></p></div>`;
+    return;
+  }
+  let html = '<div class="file-list">';
+  for (const f of data.files) {
+    html += `<div class="file-item" onclick="openMemFile(${JSON.stringify(f.path)})">
+      <span class="file-icon">📄</span>
+      <div class="file-info">
+        <div class="file-name">${esc(f.name)}</div>
+        <div class="file-meta">${fsize(f.size)}</div>
+      </div>
+      <span class="file-badge badge-purple">md</span>
+    </div>`;
+  }
+  $('content').innerHTML = html + '</div>';
+}
+
+async function openMemFile(path) {
+  setLoading();
+  let data;
+  try { data = await apiFetch('/api/memory-files/read?path=' + encodeURIComponent(path)); }
+  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadMemory'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadMemory'); return; }
+  const name = path.split('/').pop();
+  showEditor(path, name, data.content, async txt =>
+    apiFetch('/api/memory-files/save?path=' + encodeURIComponent(path), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: txt})
+    })
+  );
+}
+
+// ── Profile Files ─────────────────────────────────────────────
+async function loadProfile() {
+  const data = await apiFetch('/api/profile-files');
+  $('nc-profile').textContent = data.count || 0;
+  setToolbar('Profile Files', false, '');
+  if (!data.files || data.files.length === 0) {
+    $('content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div><p>No files found at <code>~/.hermes/profiles/lana/</code></p></div>`;
+    return;
+  }
+  let html = '<div class="file-list">';
+  for (const f of data.files) {
+    const ext = f.name.split('.').pop();
+    const bc = ext === 'yaml' || ext === 'yml' ? 'badge-orange' : ext === 'md' ? 'badge-purple' : 'badge-blue';
+    html += `<div class="file-item" onclick="openProfileFile(${JSON.stringify(f.path)})">
+      <span class="file-icon">⚙️</span>
+      <div class="file-info">
+        <div class="file-name">${esc(f.name)}</div>
+        <div class="file-meta">${fsize(f.size)}</div>
+      </div>
+      <span class="file-badge ${bc}">${esc(ext)}</span>
+    </div>`;
+  }
+  $('content').innerHTML = html + '</div>';
+}
+
+async function openProfileFile(path) {
+  setLoading();
+  let data;
+  try { data = await apiFetch('/api/profile-files/read?path=' + encodeURIComponent(path)); }
+  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadProfile'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadProfile'); return; }
+  const name = path.split('/').pop();
+  showEditor(path, name, data.content, async txt =>
+    apiFetch('/api/profile-files/save?path=' + encodeURIComponent(path), {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: txt})
+    })
+  );
+}
+
+// ── Editor ────────────────────────────────────────────────────
+function showEditor(filePath, name, content, saveFn) {
+  S.inEditor = true;
+  S.saveFn = saveFn;
+  setToolbar(name, true, '');
+
+  $('content').innerHTML = `
+    <div class="editor-wrap">
+      <div class="editor-meta">
+        <span class="editor-filename" title="${esc(filePath)}">${esc(filePath)}</span>
+        <span class="editor-dirty" id="editor-dirty">● unsaved</span>
+      </div>
+      <textarea class="editor-textarea" id="editor" spellcheck="false"></textarea>
+      <div class="editor-footer">
+        <span class="editor-status" id="editor-status">Ctrl+S / Cmd+S to save</span>
+        <button onclick="doBack()">Discard</button>
+        <button class="primary save-btn" id="save-btn" onclick="doSave()">💾 Save</button>
+      </div>
     </div>
   `;
-  window._saveFn = saveFn;
+
+  const ta = $('editor');
+  ta.value = content;
+  ta.focus();
+
+  ta.addEventListener('input', () => {
+    $('editor-dirty').classList.add('on');
+  });
+
+  ta.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      doSave();
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ta.selectionStart, end = ta.selectionEnd;
+      ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(end);
+      ta.selectionStart = ta.selectionEnd = s + 2;
+    }
+  });
 }
 
-window.saveEditor = async function() {
-  const text = document.getElementById('editor').value;
-  const status = document.getElementById('save-status');
-  status.textContent = 'Saving...';
+function doBack() {
+  S.inEditor = false;
+  loadTab(S.tab);
+}
+
+async function doSave() {
+  if (!S.saveFn) return;
+  const btn = $('save-btn');
+  const status = $('editor-status');
+  const text = $('editor').value;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner sm"></span> Saving…';
+  status.textContent = '';
+  status.style.color = '';
   try {
-    const result = await window._saveFn(text);
-    if (result.error) {
-      status.textContent = '❌ ' + result.error;
+    const result = await S.saveFn(text);
+    if (result && result.error) {
+      status.textContent = '✗ ' + result.error;
+      status.style.color = 'var(--red)';
       toast('Save failed: ' + result.error, 'error');
+      btn.innerHTML = '💾 Save';
+      btn.className = 'primary save-btn';
     } else {
-      status.textContent = '✅ Saved (' + result.size + ' bytes)';
+      $('editor-dirty').classList.remove('on');
+      status.textContent = '✓ Saved' + (result && result.size ? ' (' + fsize(result.size) + ')' : '');
+      status.style.color = 'var(--green)';
+      btn.innerHTML = '✓ Saved';
+      btn.className = 'success save-btn';
       toast('Saved!');
+      setTimeout(() => {
+        btn.innerHTML = '💾 Save';
+        btn.className = 'primary save-btn';
+      }, 2200);
     }
   } catch (e) {
-    status.textContent = '❌ ' + e.message;
-    toast('Save failed', 'error');
+    status.textContent = '✗ ' + e.message;
+    status.style.color = 'var(--red)';
+    toast('Save failed: ' + e.message, 'error');
+    btn.innerHTML = '💾 Save';
+    btn.className = 'primary save-btn';
   }
-};
-
-// ── Escape HTML ──
-function escapeHtml(s) {
-  if (!s) return '';
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  btn.disabled = false;
 }
 
-function fileSize(n) {
-  if (n < 1024) return n + ' B';
-  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
-  return (n / 1048576).toFixed(1) + ' MB';
+// ── Mem0 ─────────────────────────────────────────────────────
+async function loadMem0() {
+  setToolbar('Mem0 Memory', false, '');
+  $('content').innerHTML = `
+    <div class="search-bar">
+      <input id="mem0-q" placeholder="Search memories… (Enter to search)"
+        onkeydown="if(event.key==='Enter') doMem0Search()">
+      <button onclick="doMem0Search()">🔍 Search</button>
+      <button class="sm" onclick="loadRecentMem0()">Recent</button>
+    </div>
+    <div class="mem0-add-form">
+      <div class="form-label">Add Memory</div>
+      <textarea id="mem0-new" placeholder="Type a memory to add…"></textarea>
+      <div class="form-actions">
+        <button class="primary sm" id="mem0-add-btn" onclick="doAddMem0()">➕ Add Memory</button>
+      </div>
+    </div>
+    <div id="mem0-list"></div>
+  `;
+  await loadRecentMem0();
 }
 
-// ── Tab Loaders ──
-
-async function loadTab(tab) {
-  showLoading();
-  const title = document.getElementById('tab-title');
-  const count = document.getElementById('tab-count');
-  const c = document.getElementById('content');
-
-  switch(tab) {
-    case 'skills': {
-      title.textContent = 'Skills';
-      const data = await api('/api/skills');
-      count.textContent = data.count + ' skills';
-      if (data.error) { c.innerHTML = '<div class="card">Error: ' + data.error + '</div>'; return; }
-      let html = `<div class="file-list">`;
-      for (const skill of data.skills) {
-        const name = skill.name;
-        const dir = skill.dir;
-        html += `<div class="file-item" onclick="openSkill('${escapeHtml(dir)}')">
-          <div>
-            <div class="name">📦 ${escapeHtml(name)}</div>
-            <div class="meta">${escapeHtml(skill.path)}</div>
-          </div>
-          <div class="tag">SKILL.md</div>
-        </div>`;
-      }
-      html += `</div>`;
-      if (data.skills.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No skills found</div>';
-      c.innerHTML = html;
-      break;
-    }
-
-    case 'memory': {
-      title.textContent = 'Memory Files';
-      const data = await api('/api/memory-files');
-      count.textContent = data.count + ' files';
-      let html = '<div class="file-list">';
-      for (const f of data.files) {
-        html += `<div class="file-item" onclick="openMemoryFile('${escapeHtml(f.path)}')">
-          <div>
-            <div class="name">📄 ${escapeHtml(f.name)}</div>
-            <div class="meta">${escapeHtml(f.path)} · ${fileSize(f.size)}</div>
-          </div>
-          <div class="tag purple">.md</div>
-        </div>`;
-      }
-      html += '</div>';
-      if (data.files.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No memory files found at ~/lana_memory/memory/</div>';
-      c.innerHTML = html;
-      break;
-    }
-
-    case 'profile': {
-      title.textContent = 'Profile Files';
-      const data = await api('/api/profile-files');
-      count.textContent = data.count + ' files';
-      let html = '<div class="file-list">';
-      for (const f of data.files) {
-        const tagColor = f.name.endsWith('.md') ? 'purple' : f.name.endsWith('.yaml') ? 'orange' : '';
-        html += `<div class="file-item" onclick="openProfileFile('${escapeHtml(f.path)}')">
-          <div>
-            <div class="name">⚙️ ${escapeHtml(f.name)}</div>
-            <div class="meta">${escapeHtml(f.path)} · ${fileSize(f.size)}</div>
-          </div>
-          <div class="tag ${tagColor}">${f.name.split('.').pop()}</div>
-        </div>`;
-      }
-      html += '</div>';
-      if (data.files.length === 0) html = '<div class="card" style="text-align:center;padding:40px;color:var(--text2)">No profile files found</div>';
-      c.innerHTML = html;
-      break;
-    }
-
-    case 'mem0': {
-      title.textContent = 'Mem0 Memory';
-      const data = await api('/api/mem0/recent');
-      count.textContent = '';
-      let html = `
-        <div class="search-bar">
-          <input id="mem0-search" placeholder="Search memories..." onkeydown="if(event.key==='Enter')searchMem0()">
-          <button onclick="searchMem0()">🔍 Search</button>
-          <button onclick="loadRecentMem0()" class="green">📋 Recent</button>
-          <button onclick="showAddMem0()" class="primary">➕ Add</button>
-        </div>
-        <div id="mem0-results"></div>
-      `;
-      c.innerHTML = html;
-      renderMem0Results(data);
-      break;
-    }
-
-    case 'structure': {
-      title.textContent = 'Structure';
-      count.textContent = '';
-      const data = await api('/api/structure');
-      let html = `
-        <div class="card" style="font-family:var(--mono);font-size:13px;line-height:1.8">
-          <div class="tree-item">📁 <strong>lana_memory/</strong> <span class="tree-path">${escapeHtml(data.lana_memory_dir)}</span></div>
-          <div class="tree-item" style="padding-left:20px">📁 memory/ <span class="tree-path">${escapeHtml(data.memory_files_dir)}</span></div>
-          <div class="tree-item" style="padding-left:20px">📁 chroma_db/ <span class="tree-path">${escapeHtml(data.mem0_dir)}</span></div>
-          <div class="tree-item" style="padding-left:20px">🐍 lana_memory.py</div>
-          <div style="height:8px"></div>
-          <div class="tree-item">📁 <strong>profile/</strong> <span class="tree-path">${escapeHtml(data.profile_dir)}</span></div>
-          <div class="tree-item" style="padding-left:20px">📄 SOUL.md</div>
-          <div class="tree-item" style="padding-left:20px">⚙️ config.yaml</div>
-          <div class="tree-item" style="padding-left:20px">📄 memory_prefill.md</div>
-          <div style="height:8px"></div>
-          <div class="tree-item">📁 <strong>skills/</strong> <span class="tree-path">${escapeHtml(data.skills_dir)}</span></div>
-          <div style="height:16px"></div>
-          <div style="color:var(--text2);font-family:var(--font);font-size:12px">
-            💡 Click any tab to browse and edit files
-          </div>
-        </div>
-      `;
-      c.innerHTML = html;
-      break;
-    }
+async function loadRecentMem0() {
+  const el = $('mem0-list');
+  if (!el) return;
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading recent…</div>';
+  try {
+    const data = await apiFetch('/api/mem0/recent');
+    renderMem0Items(data, false);
+  } catch (e) {
+    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+      <button class="sm ml-auto" onclick="loadRecentMem0()">Retry</button></div>`;
   }
 }
 
-// ── Skill opener ──
-window.openSkill = async function(dir) {
-  showLoading();
-  const data = await api('/api/skills/read?path=' + encodeURIComponent(dir + '/SKILL.md'));
-  if (data.error) {
-    const c = document.getElementById('content');
-    c.innerHTML = '<div class="card">Error: ' + data.error + '</div>';
-    return;
+async function doMem0Search() {
+  const el = $('mem0-list');
+  if (!el) return;
+  const q = ($('mem0-q') || {}).value || '';
+  el.innerHTML = '<div class="loading"><span class="spinner"></span>Searching…</div>';
+  try {
+    const data = await apiFetch('/api/mem0/search?q=' + encodeURIComponent(q));
+    renderMem0Items(data, !!q);
+  } catch (e) {
+    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+      <button class="sm ml-auto" onclick="doMem0Search()">Retry</button></div>`;
   }
-  const title = dir.split('/').pop();
-  document.getElementById('tab-title').textContent = 'Editing: ' + title;
-  document.getElementById('tab-count').textContent = '';
-  showEditor(dir + '/SKILL.md', data.content, async (text) => {
-    return await api('/api/skills/save?path=' + encodeURIComponent(dir + '/SKILL.md'), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: text})
-    });
-  });
-};
+}
 
-// ── Memory file opener ──
-window.openMemoryFile = async function(path) {
-  showLoading();
-  const data = await api('/api/memory-files/read?path=' + encodeURIComponent(path));
-  if (data.error) {
-    document.getElementById('content').innerHTML = '<div class="card">Error: ' + data.error + '</div>';
-    return;
+async function doAddMem0() {
+  const ta = $('mem0-new');
+  const btn = $('mem0-add-btn');
+  if (!ta) return;
+  const text = ta.value.trim();
+  if (!text) { toast('Enter some text first', 'error'); return; }
+  btn.disabled = true;
+  btn.textContent = 'Adding…';
+  try {
+    const result = await apiFetch('/api/mem0/add', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text})
+    });
+    if (result.error) {
+      toast('Error: ' + result.error, 'error');
+    } else {
+      ta.value = '';
+      toast('Memory added!');
+      await loadRecentMem0();
+    }
+  } catch (e) {
+    toast('Error: ' + e.message, 'error');
   }
-  const name = path.split('/').pop();
-  document.getElementById('tab-title').textContent = 'Editing: ' + name;
-  document.getElementById('tab-count').textContent = '';
-  showEditor(name, data.content, async (text) => {
-    return await api('/api/memory-files/save?path=' + encodeURIComponent(path), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: text})
-    });
-  });
-};
+  btn.disabled = false;
+  btn.textContent = '➕ Add Memory';
+}
 
-// ── Profile file opener ──
-window.openProfileFile = async function(path) {
-  showLoading();
-  const data = await api('/api/profile-files/read?path=' + encodeURIComponent(path));
-  if (data.error) {
-    document.getElementById('content').innerHTML = '<div class="card">Error: ' + data.error + '</div>';
-    return;
-  }
-  const name = path.split('/').pop();
-  document.getElementById('tab-title').textContent = 'Editing: ' + name;
-  document.getElementById('tab-count').textContent = '';
-  showEditor(name, data.content, async (text) => {
-    return await api('/api/profile-files/save?path=' + encodeURIComponent(path), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: text})
-    });
-  });
-};
-
-// ── Mem0 ──
-function renderMem0Results(data) {
-  const el = document.getElementById('mem0-results');
+function renderMem0Items(data, isSearch) {
+  const el = $('mem0-list');
   if (!el) return;
 
-  if (data.error) {
-    el.innerHTML = '<div class="card" style="color:var(--red)">Error: ' + escapeHtml(data.error) + '</div>';
+  if (data && data.error) {
+    el.innerHTML = `<div class="error-banner">⚠️ ${esc(data.error)}</div>`;
     return;
   }
 
   let items = [];
   if (Array.isArray(data)) items = data;
-  else if (data.results) items = data.results;
-  else if (data.output) {
-    el.innerHTML = '<div class="card"><pre style="font-family:var(--mono);font-size:12px">' + escapeHtml(data.output) + '</pre></div>';
+  else if (data && data.results) items = data.results;
+  else if (data && data.output) {
+    el.innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-x:auto">${esc(data.output)}</pre></div>`;
     return;
   }
 
-  if (items.length === 0) {
-    el.innerHTML = '<div class="card" style="text-align:center;padding:20px;color:var(--text2)">No memories found</div>';
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧠</div><p>No memories found</p></div>`;
     return;
   }
 
-  let html = '';
+  const label = items.length + (isSearch ? ' result' : ' recent') + (items.length !== 1 ? 's' : '');
+  let html = `<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">${label}</div><div class="mem0-items">`;
   for (const item of items) {
-    const memory = item.memory || item.text || JSON.stringify(item);
-    const score = item.score ? parseFloat(item.score).toFixed(3) : null;
-    const date = item.created_at ? new Date(item.created_at).toLocaleString() : '';
-    html += `<div class="mem0-item">
-      <div class="m-text">${escapeHtml(memory)}</div>
-      <div class="m-meta">
-        ${score ? `<span class="m-score">Score: ${score}</span>` : ''}
+    const text  = item.memory || item.text || JSON.stringify(item);
+    const score = item.score != null ? parseFloat(item.score).toFixed(3) : null;
+    const date  = item.created_at ? new Date(item.created_at).toLocaleString() : '';
+    html += `<div class="mem0-item${isSearch ? ' search-result' : ''}">
+      <div class="mem0-text">${esc(text)}</div>
+      <div class="mem0-meta">
+        ${score !== null ? `<span class="mem0-score">score ${score}</span>` : ''}
         ${date ? `<span>${date}</span>` : ''}
-        ${item.id ? `<span style="color:var(--text2)">${item.id.slice(0,8)}...</span>` : ''}
+        ${item.id ? `<span class="mem0-id">${item.id.slice(0, 8)}</span>` : ''}
       </div>
     </div>`;
   }
-  el.innerHTML = html;
+  el.innerHTML = html + '</div>';
 }
 
-window.searchMem0 = async function() {
-  const q = document.getElementById('mem0-search').value;
-  const data = await api('/api/mem0/search?q=' + encodeURIComponent(q));
-  renderMem0Results(data);
-};
+// ── Structure ─────────────────────────────────────────────────
+async function loadStructure() {
+  const data = await apiFetch('/api/structure');
+  setToolbar('Structure', false, '');
 
-window.loadRecentMem0 = async function() {
-  document.getElementById('mem0-search').value = '';
-  const data = await api('/api/mem0/recent');
-  renderMem0Results(data);
-};
+  function tr(icon, name, isBold, path, indent) {
+    const ind = indent ? ` indent${indent}` : '';
+    const bold = isBold ? ' style="font-weight:600"' : '';
+    return `<div class="tree-row${ind}">
+      <span>${icon}</span>
+      <span class="tree-name${isBold ? ' dir' : ''}"${bold}>${esc(name)}</span>
+      ${path ? `<span class="tree-path">${esc(path)}</span>` : ''}
+    </div>`;
+  }
 
-window.showAddMem0 = function() {
-  const text = prompt('Enter a memory to save:');
-  if (!text) return;
-  api('/api/mem0/add', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({text})
-  }).then(data => {
-    if (data.error) toast('Error: ' + data.error, 'error');
-    else {
-      toast('Memory added!');
-      loadRecentMem0();
-    }
-  });
-};
+  $('content').innerHTML = `
+    <div class="card" style="margin-bottom:14px">
+      <div class="section-label" style="margin-bottom:12px">Directory tree</div>
+      <div class="tree">
+        ${tr('📁', 'lana_memory/', true, data.lana_memory_dir, 0)}
+        ${tr('📁', 'memory/', false, data.memory_files_dir, 1)}
+        ${tr('📁', 'chroma_db/', false, data.mem0_dir, 1)}
+        ${tr('🐍', 'lana_memory.py', false, '', 1)}
+        <div style="height:6px"></div>
+        ${tr('📁', '.hermes/profiles/lana/', true, data.profile_dir, 0)}
+        ${tr('📄', 'SOUL.md', false, '', 1)}
+        ${tr('⚙️', 'config.yaml', false, '', 1)}
+        ${tr('📄', 'memory_prefill.md', false, '', 1)}
+        <div style="height:6px"></div>
+        ${tr('📁', '.hermes/skills/', true, data.skills_dir, 0)}
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-label" style="margin-bottom:10px">Full paths</div>
+      <table class="path-table">
+        <tr><td>Memory files</td><td>${esc(data.memory_files_dir)}</td></tr>
+        <tr><td>Profile dir</td><td>${esc(data.profile_dir)}</td></tr>
+        <tr><td>Skills dir</td><td>${esc(data.skills_dir)}</td></tr>
+        <tr><td>Lana memory root</td><td>${esc(data.lana_memory_dir)}</td></tr>
+        <tr><td>Chroma DB</td><td>${esc(data.mem0_dir)}</td></tr>
+      </table>
+    </div>
+  `;
+}
 
-// ── Init ──
+// ── Init ──────────────────────────────────────────────────────
 loadTab('skills');
 </script>
 </body>

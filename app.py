@@ -8,7 +8,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -23,6 +23,10 @@ MEMORY_FILES_DIR = LANA_MEMORY / "memory"
 
 MEMORY_PY = LANA_MEMORY / "lana_memory.py"
 VENV_PYTHON = LANA_MEMORY / ".venv" / "bin" / "python3"
+
+
+class SaveRequest(BaseModel):
+    content: str
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -129,14 +133,12 @@ def read_skill(path: str = Query(...)):
 
 
 @app.put("/api/skills/save")
-def save_skill(path: str = Query(...), data: dict = None):
+def save_skill(path: str = Query(...), data: SaveRequest = Body(...)):
     """Save a skill's SKILL.md."""
-    if data is None:
-        return {"error": "No data provided"}
     p = Path(path)
     if not str(p).startswith(str(SKILLS_DIR)):
         return {"error": "Invalid path"}
-    return write_file_safe(p, data.get("content", ""))
+    return write_file_safe(p, data.content)
 
 
 # ── Memory Markdown Files ────────────────────────────────────────────
@@ -164,13 +166,11 @@ def read_memory_file(path: str = Query(...)):
 
 
 @app.put("/api/memory-files/save")
-def save_memory_file(path: str = Query(...), data: dict = None):
-    if data is None:
-        return {"error": "No data provided"}
+def save_memory_file(path: str = Query(...), data: SaveRequest = Body(...)):
     p = Path(path)
     if not str(p).startswith(str(MEMORY_FILES_DIR)):
         return {"error": "Invalid path"}
-    return write_file_safe(p, data.get("content", ""))
+    return write_file_safe(p, data.content)
 
 
 # ── Profile Files ────────────────────────────────────────────────────
@@ -198,13 +198,11 @@ def read_profile_file(path: str = Query(...)):
 
 
 @app.put("/api/profile-files/save")
-def save_profile_file(path: str = Query(...), data: dict = None):
-    if data is None:
-        return {"error": "No data provided"}
+def save_profile_file(path: str = Query(...), data: SaveRequest = Body(...)):
     p = Path(path)
     if not str(p).startswith(str(PROFILE_DIR)):
         return {"error": "Invalid path"}
-    return write_file_safe(p, data.get("content", ""))
+    return write_file_safe(p, data.content)
 
 
 # ── Mem0 ─────────────────────────────────────────────────────────────

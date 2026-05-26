@@ -210,8 +210,9 @@ These 9 images ARE Lana's face and body. They were generated and curated by you:
 | `lana_ref_05_gaze_right` | Profile right |
 | `lana_ref_06_gaze_left` | Profile left |
 | `lana_ref_07_face_shadow_lighting` | Face lighting ref |
-| `lana_pyjamas_hero_reference.png` | Body/bust size (pyjamas) |
-| `lana_golden_hour_master_hero.png` | Face + body master (evening) |
+| `lana_golden_hour_master_hero.png` | face + body master (evening) |
+
+**Invalid/archived:** `lana_pyjamas_hero_reference.png` is not a valid reference Fernando gave Lana and must not be used.
 
 **Rule:** Every image generation MUST attach the relevant face reference first, then body reference if the shot shows body. Face consistency is non-negotiable.
 

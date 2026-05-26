@@ -8,6 +8,8 @@ import os
 import subprocess
 import sys
 import datetime as _dt
+import base64
+import re
 from pathlib import Path
 from fastapi import FastAPI, Query, Body
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
@@ -40,6 +42,11 @@ VENV_PYTHON = LANA_MEMORY / ".venv" / "bin" / "python3"
 
 class SaveRequest(BaseModel):
     content: str
+
+
+class ReferenceUploadRequest(BaseModel):
+    filename: str
+    data_url: str
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -598,6 +605,33 @@ def generate_content_prompt(
 # ── Image Serving ──────────────────────────────────────────────────────
 
 IDENTITY_REF_DIR = HOME / ".hermes" / "profiles" / "lana" / "home" / "lana-identity-references"
+IDENTITY_REF_INVALID_DIR = IDENTITY_REF_DIR / "invalid"
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+MAX_REFERENCE_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+def _safe_reference_filename(filename: str) -> str:
+    """Return a safe single-file image name or raise ValueError."""
+    name = Path(filename or "").name.strip()
+    if not name:
+        raise ValueError("Missing filename")
+    if name.startswith(".") or "/" in name or "\\" in name:
+        raise ValueError("Invalid filename")
+    if not re.fullmatch(r"[A-Za-z0-9._ -]+", name):
+        raise ValueError("Filename may only contain letters, numbers, spaces, dots, underscores, and hyphens")
+    if Path(name).suffix.lower() not in ALLOWED_IMAGE_EXTENSIONS:
+        raise ValueError("Only PNG, JPG, JPEG, and WEBP images are allowed")
+    return name
+
+
+def _image_metadata(path: Path) -> dict:
+    st = path.stat()
+    return {
+        "filename": path.name,
+        "size": st.st_size,
+        "modified_at": _dt.datetime.fromtimestamp(st.st_mtime).isoformat(),
+        "url": f"/api/identity-references/{path.name}",
+    }
 
 
 @app.get("/api/images/{filename:path}")
@@ -612,7 +646,11 @@ def serve_image(filename: str):
 @app.get("/api/identity-references/{filename:path}")
 def serve_identity_ref(filename: str):
     """Serve identity reference images."""
-    filepath = IDENTITY_REF_DIR / filename
+    try:
+        safe_name = _safe_reference_filename(filename)
+    except ValueError:
+        return JSONResponse({"error": "Invalid filename"}, status_code=400)
+    filepath = IDENTITY_REF_DIR / safe_name
     if not filepath.exists() or not filepath.is_file():
         return JSONResponse({"error": "Not found"}, status_code=404)
     return FileResponse(str(filepath))
@@ -625,13 +663,63 @@ def list_identity_refs():
         return {"images": [], "count": 0}
     images = []
     for f in sorted(IDENTITY_REF_DIR.iterdir()):
-        if f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp'):
-            images.append({
-                "filename": f.name,
-                "size": f.stat().st_size,
-                "url": f"/api/identity-references/{f.name}",
-            })
-    return {"images": images, "count": len(images)}
+        if f.is_file() and f.suffix.lower() in ALLOWED_IMAGE_EXTENSIONS:
+            images.append(_image_metadata(f))
+    return {"images": images, "count": len(images), "directory": str(IDENTITY_REF_DIR)}
+
+
+@app.post("/api/identity-references/upload")
+def upload_identity_ref(req: ReferenceUploadRequest):
+    """Upload/add a new active identity reference image.
+
+    The frontend sends a data URL so the app does not depend on python-multipart.
+    Existing files are never overwritten.
+    """
+    try:
+        safe_name = _safe_reference_filename(req.filename)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+    if "," not in req.data_url:
+        return JSONResponse({"error": "Invalid image data"}, status_code=400)
+    header, b64 = req.data_url.split(",", 1)
+    if not header.startswith("data:image/") or ";base64" not in header:
+        return JSONResponse({"error": "Expected a base64 image data URL"}, status_code=400)
+    try:
+        raw = base64.b64decode(b64, validate=True)
+    except Exception:
+        return JSONResponse({"error": "Invalid base64 image data"}, status_code=400)
+    if len(raw) == 0:
+        return JSONResponse({"error": "Empty image"}, status_code=400)
+    if len(raw) > MAX_REFERENCE_UPLOAD_BYTES:
+        return JSONResponse({"error": "Image is too large; max is 50MB"}, status_code=400)
+
+    IDENTITY_REF_DIR.mkdir(parents=True, exist_ok=True)
+    target = IDENTITY_REF_DIR / safe_name
+    if target.exists():
+        return JSONResponse({"error": "A reference with that filename already exists"}, status_code=409)
+    target.write_bytes(raw)
+    return {"status": "ok", "image": _image_metadata(target)}
+
+
+@app.delete("/api/identity-references/{filename:path}")
+def delete_identity_ref(filename: str):
+    """Remove an image from Lana's active reference library by archiving it under invalid/."""
+    try:
+        safe_name = _safe_reference_filename(filename)
+    except ValueError as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+    source = IDENTITY_REF_DIR / safe_name
+    if not source.exists() or not source.is_file():
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    IDENTITY_REF_INVALID_DIR.mkdir(parents=True, exist_ok=True)
+    dest = IDENTITY_REF_INVALID_DIR / safe_name
+    if dest.exists():
+        stem = dest.stem
+        suffix = dest.suffix
+        dest = IDENTITY_REF_INVALID_DIR / f"{stem}_{_dt.datetime.now().strftime('%Y%m%d_%H%M%S')}{suffix}"
+    source.rename(dest)
+    return {"status": "archived", "filename": safe_name, "archived_to": str(dest)}
 
 
 # ── Structure ─────────────────────────────────────────────────────────

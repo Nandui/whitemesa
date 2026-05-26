@@ -510,6 +510,49 @@ textarea {
     </div>
   </nav>
   <nav class="nav-section">
+    <div class="nav-label">Phase 1.5 — Continuity</div>
+    <div class="nav-item" data-tab="dreams">
+      <span class="nav-icon">🌙</span>
+      <span class="nav-text">Dreams</span>
+      <span class="nav-count" id="nc-dreams">–</span>
+    </div>
+    <div class="nav-item" data-tab="consolidations">
+      <span class="nav-icon">🔬</span>
+      <span class="nav-text">Consolidation</span>
+      <span class="nav-count" id="nc-consolidations">–</span>
+    </div>
+    <div class="nav-item" data-tab="fallback">
+      <span class="nav-icon">🛡️</span>
+      <span class="nav-text">Fallback</span>
+      <span class="nav-count" id="nc-fallback">–</span>
+    </div>
+    <div class="nav-item" data-tab="timeline">
+      <span class="nav-icon">📅</span>
+      <span class="nav-text">Timeline</span>
+    </div>
+    <div class="nav-item" data-tab="inner-state">
+      <span class="nav-icon">💭</span>
+      <span class="nav-text">Inner State</span>
+    </div>
+    <div class="nav-item" data-tab="roadmap">
+      <span class="nav-icon">🗺️</span>
+      <span class="nav-text">Roadmap</span>
+    </div>
+    <div class="nav-item" data-tab="proposed">
+      <span class="nav-icon">📋</span>
+      <span class="nav-text">Proposed</span>
+      <span class="nav-count" id="nc-proposed">–</span>
+    </div>
+  </nav>
+  <nav class="nav-section">
+    <div class="nav-label">Phase 5 — Content</div>
+    <div class="nav-item" data-tab="content">
+      <span class="nav-icon">📸</span>
+      <span class="nav-text">Content</span>
+      <span class="nav-count" id="nc-content">–</span>
+    </div>
+  </nav>
+  <nav class="nav-section">
     <div class="nav-label">Memory</div>
     <div class="nav-item" data-tab="mem0">
       <span class="nav-icon">🧠</span>
@@ -518,6 +561,10 @@ textarea {
   </nav>
   <nav class="nav-section">
     <div class="nav-label">System</div>
+    <div class="nav-item" data-tab="manual">
+      <span class="nav-icon">📖</span>
+      <span class="nav-text">Manual</span>
+    </div>
     <div class="nav-item" data-tab="structure">
       <span class="nav-icon">📂</span>
       <span class="nav-text">Structure</span>
@@ -620,6 +667,15 @@ async function loadTab(tab) {
     else if (tab === 'profile')   await loadProfile();
     else if (tab === 'mem0')      await loadMem0();
     else if (tab === 'structure') await loadStructure();
+    else if (tab === 'dreams')        await loadDreams();
+    else if (tab === 'consolidations') await loadConsolidations();
+    else if (tab === 'fallback')      await loadFallback();
+    else if (tab === 'timeline')      await loadTimeline();
+    else if (tab === 'inner-state')   await loadInnerState();
+    else if (tab === 'roadmap')       await loadRoadmap();
+    else if (tab === 'proposed')      await loadProposed();
+    else if (tab === 'content')       await loadContent();
+    else if (tab === 'manual')        await loadManual();
   } catch (e) {
     $('content').innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
       <button class="sm ml-auto" onclick="loadTab('${S.tab}')">Retry</button></div>`;
@@ -1022,6 +1078,576 @@ async function loadStructure() {
     </div>
   `;
 }
+
+// ── Phase 1.5: Dreams ────────────────────────────────────────────────
+async function loadDreams() {
+  const data = await apiFetch('/api/dreams');
+  $('nc-dreams').textContent = data.count || 0;
+  setToolbar('Dreams', false, '');
+  if (!data.files || data.files.length === 0) {
+    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🌙</div><p>No dream files yet. Run <code>python dream_cycle.py --event "..."</code></p></div>`;
+    return;
+  }
+  let html = '<div class="file-list">';
+  for (const f of data.files) {
+    const dt = f.name.replace('dream_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
+    html += `<div class="file-item" onclick="openDream(${JSON.stringify(f.path)})">
+      <span class="file-icon">🌙</span>
+      <div class="file-info">
+        <div class="file-name">${esc(dt)}</div>
+        <div class="file-meta">${fsize(f.size)}</div>
+      </div>
+      <button class="sm danger" onclick="event.stopPropagation();deleteDreamFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
+    </div>`;
+  }
+  $('content').innerHTML = html + '</div>';
+}
+
+async function openDream(path) {
+  setLoading();
+  let data;
+  try { data = await apiFetch('/api/dreams/read?path=' + encodeURIComponent(path)); }
+  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadDreams'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadDreams'); return; }
+  const name = path.split('/').pop();
+  S.inEditor = true;
+  setToolbar(name, true, '');
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+async function deleteDreamFile(path) {
+  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
+  try {
+    await apiFetch('/api/dreams/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
+    toast('Deleted');
+    loadDreams();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Phase 1.5: Consolidations ─────────────────────────────────────────
+
+async function loadConsolidations() {
+  const data = await apiFetch('/api/consolidations');
+  $('nc-consolidations').textContent = data.count || 0;
+  setToolbar('Consolidations', false, '');
+  if (!data.files || data.files.length === 0) {
+    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><p>No consolidation reports yet. Run <code>python consolidate_memory.py</code></p></div>`;
+    return;
+  }
+  let html = '<div class="file-list">';
+  for (const f of data.files) {
+    const dt = f.name.replace('consolidation_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
+    html += `<div class="file-item" onclick="openConsolidation(${JSON.stringify(f.path)})">
+      <span class="file-icon">🔬</span>
+      <div class="file-info">
+        <div class="file-name">${esc(dt)}</div>
+        <div class="file-meta">${fsize(f.size)}</div>
+      </div>
+      <button class="sm danger" onclick="event.stopPropagation();deleteConsolidationFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
+    </div>`;
+  }
+  $('content').innerHTML = html + '</div>';
+}
+
+async function openConsolidation(path) {
+  setLoading();
+  let data;
+  try { data = await apiFetch('/api/consolidations/read?path=' + encodeURIComponent(path)); }
+  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadConsolidations'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadConsolidations'); return; }
+  const name = path.split('/').pop();
+  S.inEditor = true;
+  setToolbar(name, true, '');
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+async function deleteConsolidationFile(path) {
+  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
+  try {
+    await apiFetch('/api/consolidations/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
+    toast('Deleted');
+    loadConsolidations();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Phase 1.5: Fallback ───────────────────────────────────────────────
+
+async function loadFallback() {
+  setToolbar('Fallback Memories', false,
+    `<button class="danger sm" onclick="clearFallback()">🗑 Clear All</button>`
+  );
+  let data;
+  try { data = await apiFetch('/api/fallback-memories'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadFallback'); return; }
+  $('nc-fallback').textContent = data.count || 0;
+  if (!data.memories || data.memories.length === 0) {
+    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🛡️</div><p>No fallback memories. They appear when DeepSeek extraction is temporarily unavailable.</p></div>`;
+    return;
+  }
+  let html = '<div class="mem0-items">';
+  for (const m of data.memories) {
+    const id = m.id || '';
+    const text = m.memory || JSON.stringify(m);
+    const reason = m.reason ? `<span class="mem0-score" style="background:rgba(210,153,34,0.15);color:var(--orange)">${esc(m.reason)}</span>` : '';
+    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+    html += `<div class="mem0-item">
+      <div class="mem0-text">${esc(text)}</div>
+      <div class="mem0-meta">
+        ${reason}
+        <span>${date}</span>
+        <span class="mem0-id">${id.slice(0,12)}</span>
+        <button class="sm danger" style="margin-left:auto" onclick="deleteFallbackMem('${id}')">🗑</button>
+      </div>
+    </div>`;
+  }
+  $('content').innerHTML = html + '</div>';
+}
+
+async function deleteFallbackMem(id) {
+  try {
+    await apiFetch('/api/fallback-memories/delete?memory_id=' + encodeURIComponent(id), {method:'DELETE'});
+    toast('Removed');
+    loadFallback();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function clearFallback() {
+  if (!confirm('Clear ALL fallback memories?')) return;
+  try {
+    await apiFetch('/api/fallback-memories/clear', {method:'DELETE'});
+    toast('Cleared');
+    loadFallback();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ── Phase 1.5: Timeline ───────────────────────────────────────────────
+
+async function loadTimeline() {
+  setToolbar('Timeline', false,
+    `<button class="primary sm" id="timeline-edit-btn" onclick="editTimeline()">✏️ Edit</button>`
+  );
+  let data;
+  try { data = await apiFetch('/api/timeline'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadTimeline'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadTimeline'); return; }
+  S._timelineContent = data.content;
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+function editTimeline() {
+  if (!S._timelineContent) return;
+  showEditor(String(TIMELINE_PATH || '/Users/fernandoserina/lana_memory/timeline.md'), 'timeline.md', S._timelineContent, async txt =>
+    apiFetch('/api/timeline/save', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: txt})
+    })
+  );
+}
+const TIMELINE_PATH = '/Users/fernandoserina/lana_memory/timeline.md';
+
+// ── Phase 1.5: Inner State ────────────────────────────────────────────
+
+async function loadInnerState() {
+  setToolbar('Inner State', false,
+    `<button class="primary sm" id="inner-edit-btn" onclick="editInnerState()">✏️ Edit</button>`
+  );
+  let data;
+  try { data = await apiFetch('/api/inner-state'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadInnerState'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadInnerState'); return; }
+  S._innerStateContent = data.content;
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+function editInnerState() {
+  if (!S._innerStateContent) return;
+  showEditor('/Users/fernandoserina/lana_memory/inner_state.md', 'inner_state.md', S._innerStateContent, async txt =>
+    apiFetch('/api/inner-state/save', {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({content: txt})
+    })
+  );
+}
+
+// ── Phase 1.5: Roadmap ────────────────────────────────────────────────
+
+async function loadRoadmap() {
+  setToolbar('Roadmap', false, '');
+  let data;
+  try { data = await apiFetch('/api/roadmap'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadRoadmap'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadRoadmap'); return; }
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+
+// ── Phase 2: Proposed Memories (Approval-Gated) ────────────────────────
+
+const STATUS_FILTERS = ['proposed', 'approved', 'rejected', 'all'];
+S.proposedStatus = 'proposed';
+
+async function loadProposed() {
+  setToolbar('Proposed Memories', false,
+    `<select id="prop-status-filter" onchange="changeProposedFilter(this.value)" style="width:110px;font-size:12px">
+      ${STATUS_FILTERS.map(s => `<option value="${s}" ${s===S.proposedStatus?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+    </select>
+    <button class="success sm" id="btn-approve-all" onclick="approveAllProposed()">✅ Approve All</button>
+    <button class="danger sm" id="btn-reject-all" onclick="rejectAllProposed()">❌ Reject All</button>
+    <button class="sm" style="color:var(--text2)" onclick="clearResolvedProposed()">🧹 Clear Resolved</button>`
+  );
+  await fetchProposed();
+}
+
+function changeProposedFilter(val) {
+  S.proposedStatus = val;
+  fetchProposed();
+}
+
+async function fetchProposed() {
+  let data;
+  try { data = await apiFetch('/api/proposed-memories?status=' + S.proposedStatus); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadProposed'); return; }
+
+  $('nc-proposed').textContent = data.counts ? data.counts.proposed : 0;
+
+  const mems = data.memories || [];
+  if (mems.length === 0) {
+    $('content').innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <p>${S.proposedStatus === 'proposed' ? 'No proposed memories pending review. Run dream_cycle.py or consolidate_memory.py to generate proposals.' : 'No ' + S.proposedStatus + ' memories.'}</p>
+    </div>`;
+    return;
+  }
+
+  let html = `<div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:var(--text2)">
+    <span>🟡 Proposed: ${data.counts.proposed}</span>
+    <span>🟢 Approved: ${data.counts.approved}</span>
+    <span>🔴 Rejected: ${data.counts.rejected}</span>
+  </div><div class="mem0-items">`;
+
+  for (const m of mems) {
+    const statusColor = m.status === 'approved' ? 'var(--green)' : m.status === 'rejected' ? 'var(--red)' : 'var(--orange)';
+    const statusIcon = m.status === 'approved' ? '✅' : m.status === 'rejected' ? '❌' : '🟡';
+    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+    const resolved = m.resolved_at ? ` · resolved ${new Date(m.resolved_at).toLocaleString()}` : '';
+    const typeBadge = m.type === 'dream' ? '🌙dream' : '🔬consolidation';
+
+    html += `<div class="mem0-item" style="border-left:3px solid ${statusColor}">
+      <div class="mem0-text">${esc(m.memory)}</div>
+      <div class="mem0-meta">
+        <span style="color:${statusColor}">${statusIcon} ${m.status}</span>
+        <span>${typeBadge}</span>
+        <span>${date}${resolved}</span>
+        <span class="mem0-id">${(m.id||'').slice(0,8)}</span>
+        <span style="font-size:10.5px;color:var(--text2)" title="${esc(m.source)}">${esc(m.source.slice(0,30))}</span>
+      </div>`;
+
+    if (m.status === 'proposed') {
+      html += `<div style="display:flex;gap:6px;margin-top:8px">
+        <button class="success sm" onclick="approveProposed('${m.id}')">✅ Approve</button>
+        <button class="danger sm" onclick="rejectProposed('${m.id}')">❌ Reject</button>
+      </div>`;
+    }
+
+    html += `</div>`;
+  }
+
+  $('content').innerHTML = html + '</div>';
+
+  // Hide batch buttons if no proposed items in view
+  const hasProposed = mems.some(m => m.status === 'proposed');
+  const btnAll = $('btn-approve-all');
+  const btnRej = $('btn-reject-all');
+  if (btnAll) btnAll.style.display = hasProposed ? '' : 'none';
+  if (btnRej) btnRej.style.display = hasProposed ? '' : 'none';
+}
+
+async function approveProposed(id) {
+  try {
+    const data = await apiFetch('/api/proposed-memories/approve', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({memory_id: id})
+    });
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('✅ Approved & saved to Mem0!');
+    fetchProposed();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function rejectProposed(id) {
+  try {
+    const data = await apiFetch('/api/proposed-memories/reject', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({memory_id: id})
+    });
+    if (data.error) { toast(data.error, 'error'); return; }
+    toast('❌ Rejected');
+    fetchProposed();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function approveAllProposed() {
+  if (!confirm('Approve ALL proposed memories? Each will be saved to Mem0.')) return;
+  try {
+    const data = await apiFetch('/api/proposed-memories/approve-all', {method:'POST'});
+    toast(`✅ Approved ${data.approved_count} memories!`);
+    fetchProposed();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function rejectAllProposed() {
+  if (!confirm('Reject ALL proposed memories?')) return;
+  try {
+    const data = await apiFetch('/api/proposed-memories/reject-all', {method:'POST'});
+    toast(`❌ Rejected ${data.rejected_count} memories`);
+    fetchProposed();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function clearResolvedProposed() {
+  if (!confirm('Remove all approved/rejected entries, keeping only proposed?')) return;
+  try {
+    await apiFetch('/api/proposed-memories/clear-resolved', {method:'DELETE'});
+    toast('Cleaned up!');
+    fetchProposed();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+
+// ── Phase 5: Content & Embodiment ────────────────────────────────────
+
+async function loadContent() {
+  setToolbar('Content Studio', false,
+    `<select id="content-subtab" onchange="switchContentSubtab(this.value)" style="width:150px;font-size:12px">
+      <option value="gallery">🖼️ Gallery</option>
+      <option value="visual">🎨 Visual Identity</option>
+      <option value="strategy">📋 Strategy</option>
+      <option value="voice">🎤 Voice Guide</option>
+      <option value="generate">✨ Generate Prompt</option>
+    </select>`
+  );
+  await switchContentSubtab('gallery');
+}
+
+async function switchContentSubtab(sub) {
+  S.contentSubtab = sub;
+  $('content-subtab').value = sub;
+  if (sub === 'gallery')     await showContentGallery();
+  else if (sub === 'visual') await showVisualIdentity();
+  else if (sub === 'strategy') await showContentStrategy();
+  else if (sub === 'voice')  await showVoiceGuide();
+  else if (sub === 'generate') await showPromptGenerator();
+}
+
+async function showContentGallery() {
+  let data;
+  try { data = await apiFetch('/api/content-catalog'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+
+  $('nc-content').textContent = data.image_count || 0;
+
+  let html = `<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
+    <span>🖼️ ${data.image_count} images</span>
+    <span>✅ ${data.passed_count} passed QC</span>
+    ${data.has_visual_identity ? '<span>🎨 Visual Identity ✓</span>' : '<span style="color:var(--red)">🎨 Visual Identity missing</span>'}
+    ${data.has_content_strategy ? '<span>📋 Strategy ✓</span>' : '<span style="color:var(--red)">📋 Strategy missing</span>'}
+    ${data.has_voice_guide ? '<span>🎤 Voice Guide ✓</span>' : '<span style="color:var(--red)">🎤 Voice Guide missing</span>'}
+  </div>`;
+
+  if (!data.images || data.images.length === 0) {
+    html += `<div class="empty-state">
+      <div class="empty-icon">📸</div>
+      <p>No images generated yet. Use Higgsfield or the Generate tab to create Lana's first photos.</p>
+    </div>`;
+  } else {
+    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">`;
+    for (const img of data.images) {
+      const status = img.passed_qc ? '✅' : '❌';
+      const cat = img.category || 'unknown';
+      const brief = (img.brief || '').slice(0, 60);
+      const date = img.created_at ? new Date(img.created_at).toLocaleDateString() : '';
+      const imgUrl = `/api/images/${img.filename}`;
+      html += `<div class="card" style="padding:12px">
+        <div style="position:relative;margin-bottom:8px;background:var(--surface3);border-radius:4px;overflow:hidden;cursor:pointer" onclick="viewFullImage('${imgUrl}')">
+          <img src="${imgUrl}" alt="${esc(img.filename)}" loading="lazy"
+               style="width:100%;height:300px;object-fit:cover;display:block"
+               onerror="this.parentElement.innerHTML='<div style=\\'padding:60px 20px;text-align:center;color:var(--text2)\\'><div style=\\'font-size:32px\\'>🖼️</div><div style=\\'font-size:11px;margin-top:8px\\'>Image not found</div></div>'">
+        </div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:3px">${status} ${cat} · ${date}</div>
+        <div style="font-size:12px;margin-bottom:2px;word-break:break-word">${esc(img.filename)}</div>
+        ${brief ? `<div style="font-size:11px;color:var(--text2)">${esc(brief)}</div>` : ''}
+        ${img.qc_notes ? `<div style="font-size:10px;color:var(--orange);margin-top:4px">${esc(img.qc_notes)}</div>` : ''}
+        <div style="margin-top:8px;display:flex;gap:4px">
+          <button class="sm success" onclick="qcImage('${img.filename}',true)">✅ Pass</button>
+          <button class="sm danger" onclick="qcImage('${img.filename}',false)">❌ Fail</button>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+  $('content').innerHTML = html;
+}
+
+async function qcImage(filename, passed) {
+  const notes = passed ? 'QC passed' : prompt('Rejection reason?');
+  if (!passed && !notes) return;
+  try {
+    await apiFetch('/api/content/qc-update', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({filename, passed_qc: passed, qc_notes: notes || 'QC passed'})
+    });
+    toast(passed ? '✅ QC passed' : '❌ QC failed');
+    showContentGallery();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+function viewFullImage(url) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  overlay.onclick = () => overlay.remove();
+  const img = document.createElement('img');
+  img.src = url;
+  img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px;box-shadow:0 0 40px rgba(0,0,0,0.5)';
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+  // Close on Escape
+  const onKey = (e) => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }};
+  document.addEventListener('keydown', onKey);
+}
+
+async function showVisualIdentity() {
+  let data;
+  try { data = await apiFetch('/api/content/visual-identity'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+async function showContentStrategy() {
+  let data;
+  try { data = await apiFetch('/api/content/content-strategy'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+async function showVoiceGuide() {
+  let data;
+  try { data = await apiFetch('/api/content/voice-guide'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+}
+
+async function showPromptGenerator() {
+  $('content').innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-label" style="margin-bottom:10px">Generate Image Prompt</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <select id="gen-category" style="width:140px">
+          <option value="casual">Casual Everyday</option>
+          <option value="cosy">Cosy at Home</option>
+          <option value="going_out">Going Out / Content</option>
+          <option value="coastal">Coastal Irish</option>
+        </select>
+        <input id="gen-brief" placeholder="Scene: gaming with tea..." style="flex:1;min-width:200px">
+      </div>
+      <button class="primary sm" onclick="doGeneratePrompt()">✨ Generate Prompt</button>
+      <button class="sm" style="margin-left:8px" onclick="copyPrompt()">📋 Copy</button>
+    </div>
+    <div class="card">
+      <div class="section-label" style="margin-bottom:8px">Generated Prompt</div>
+      <pre id="gen-output" style="font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;line-height:1.5;color:var(--text2)">Click Generate to create a prompt...</pre>
+    </div>
+  `;
+  S._lastPrompt = '';
+}
+
+async function doGeneratePrompt() {
+  const cat = $('gen-category').value;
+  const brief = $('gen-brief').value;
+  const out = $('gen-output');
+  out.textContent = 'Generating...';
+  try {
+    const data = await apiFetch('/api/content/generate-prompt?category=' + cat + '&brief=' + encodeURIComponent(brief));
+    if (data.error) { out.textContent = 'Error: ' + data.error; return; }
+    S._lastPrompt = data.prompt;
+    out.textContent = data.prompt;
+  } catch(e) { out.textContent = 'Error: ' + e.message; }
+}
+
+function copyPrompt() {
+  if (!S._lastPrompt) { toast('Generate a prompt first', 'error'); return; }
+  navigator.clipboard.writeText(S._lastPrompt).then(() => toast('Copied!'));
+}
+
+
+// ── Manual ────────────────────────────────────────────────────
+
+async function loadManual() {
+  setToolbar('📖 Lana System Manual', false, '');
+  let data;
+  try { data = await apiFetch('/api/manual'); }
+  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadManual'); return; }
+  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadManual'); return; }
+
+  const html = renderMarkdown(data.content);
+  $('content').innerHTML = `<div class="card" style="padding:24px 32px;max-width:900px">
+    <div style="font-size:10px;color:var(--text2);margin-bottom:12px">
+      ${esc(data.path)} · ${(data.size / 1024).toFixed(1)} KB
+    </div>
+    <div class="manual-content">${html}</div>
+  </div>`;
+}
+
+function renderMarkdown(md) {
+  let html = esc(md);
+  // Headings
+  html = html.replace(/^#### (.+)$/gm, '<h4 style="font-size:13px;font-weight:700;margin:16px 0 4px;color:var(--purple)">$1</h4>');
+  html = html.replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;margin:20px 0 6px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:4px">$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2 style="font-size:18px;font-weight:700;margin:28px 0 10px;color:var(--text)">$1</h2>');
+  html = html.replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;margin:32px 0 12px;color:var(--text);letter-spacing:-0.3px">$1</h1>');
+  // Bold / italic
+  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12px">$1</code>');
+  // Code blocks
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre style="background:var(--surface3);padding:12px 16px;border-radius:var(--radius);overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.5;margin:12px 0;border:1px solid var(--border)">$2</pre>');
+  // Horizontal rules
+  html = html.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0">');
+  // Tables
+  html = html.replace(/^\|(.+)\|$/gm, function(m) {
+    const cells = m.split('|').filter(c => c.trim()).map(c => c.trim());
+    if (cells.every(c => /^[-:]+$/.test(c))) return '<!-- sep -->';
+    const isHeader = m.includes('---');
+    const tag = isHeader ? 'th' : 'td';
+    return '<tr>' + cells.map(c => `<${tag} style="padding:4px 12px;border:1px solid var(--border);text-align:left;font-size:12px">${c}</${tag}>`).join('') + '</tr>';
+  });
+  // Wrap table rows
+  html = html.replace(/(<tr>[\s\S]*?<\/tr>)\n(?=<tr>)/g, '$1');
+  html = html.replace(/((?:<tr>[\s\S]*?<\/tr>\n?)+)/g, '<table style="border-collapse:collapse;margin:12px 0;width:100%">$1</table>');
+  // Lists
+  html = html.replace(/^- (.+)$/gm, '<li style="margin:2px 0 2px 20px;font-size:13px">$1</li>');
+  html = html.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\n?)+)/g, '<ul style="margin:8px 0">$1</ul>');
+  // Paragraphs (double newlines)
+  html = html.replace(/\n\n/g, '</p><p style="margin:8px 0;font-size:13px;line-height:1.6">');
+  html = '<p style="margin:8px 0;font-size:13px;line-height:1.6">' + html + '</p>';
+  // Clean up empty paragraphs
+  html = html.replace(/<p[^>]*><\/p>/g, '');
+  html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
+  // Clean up separator comments
+  html = html.replace(/<!-- sep -->/g, '');
+
+  return html;
+}
+
 
 // ── Init ──────────────────────────────────────────────────────
 loadTab('skills');

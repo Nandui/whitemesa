@@ -1,1758 +1,1895 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lana Control Panel</title>
-<style>
-:root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #1c2333;
-  --surface3: #21262d;
-  --border: #30363d;
-  --text: #e6edf3;
-  --text2: #8b949e;
-  --accent: #58a6ff;
-  --accent-dim: #1f6feb;
-  --green: #3fb950;
-  --orange: #d29922;
-  --red: #f85149;
-  --purple: #bc8cff;
-  --radius: 7px;
-  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  height: 100vh;
-  display: flex;
-  overflow: hidden;
-}
-
-/* scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #484f58; }
-
-/* ── Sidebar ── */
-.sidebar {
-  width: 220px;
-  min-width: 220px;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-.sidebar-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-.sidebar-header h1 {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-}
-.badge {
-  font-size: 10px;
-  background: linear-gradient(135deg, #7c3aed, var(--accent));
-  color: #fff;
-  padding: 2px 7px;
-  border-radius: 10px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-.nav-section { padding: 6px 0; }
-.nav-label {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text2);
-  padding: 4px 16px 6px;
-}
-.nav-item {
-  padding: 8px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 13px;
-  color: var(--text2);
-  border-left: 3px solid transparent;
-  transition: background 0.1s, color 0.1s;
-  user-select: none;
-}
-.nav-item:hover { background: var(--surface2); color: var(--text); }
-.nav-item.active {
-  color: var(--text);
-  border-left-color: var(--accent);
-  background: rgba(88,166,255,0.07);
-}
-.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
-.nav-text { flex: 1; }
-.nav-count {
-  font-size: 10px;
-  background: var(--surface3);
-  color: var(--text2);
-  padding: 1px 6px;
-  border-radius: 8px;
-  min-width: 18px;
-  text-align: center;
-}
-.sidebar-footer {
-  margin-top: auto;
-  padding: 10px 16px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text2);
-  flex-shrink: 0;
-}
-
-/* ── Main ── */
-.main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 0;
-}
-.toolbar {
-  padding: 9px 18px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 48px;
-  flex-shrink: 0;
-}
-.toolbar-back {
-  font-family: var(--font);
-  font-size: 12px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text2);
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  gap: 4px;
-  transition: background 0.1s, color 0.1s;
-  flex-shrink: 0;
-}
-.toolbar-back:hover { color: var(--text); background: var(--surface3); }
-.toolbar-back.visible { display: flex; }
-.toolbar h2 {
-  font-size: 14px;
-  font-weight: 600;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.toolbar-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0; }
-
-.content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px 20px;
-}
-
-/* ── Buttons ── */
-button {
-  font-family: var(--font);
-  font-size: 12.5px;
-  padding: 6px 13px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--text);
-  cursor: pointer;
-  transition: background 0.1s, border-color 0.1s;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-button:hover { background: var(--surface3); border-color: #484f58; }
-button:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
-button.primary { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
-button.primary:hover { background: #2a7dd2; }
-button.success { background: rgba(63,185,80,0.12); border-color: var(--green); color: var(--green); }
-button.success:hover { background: rgba(63,185,80,0.2); }
-button.danger { border-color: var(--red); color: var(--red); }
-button.danger:hover { background: rgba(248,81,73,0.1); }
-button.sm { padding: 4px 10px; font-size: 11.5px; }
-
-input, textarea, select {
-  font-family: var(--font);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 7px 11px;
-  border-radius: var(--radius);
-  outline: none;
-  font-size: 13px;
-  transition: border-color 0.1s, box-shadow 0.1s;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(88,166,255,0.1);
-}
-input::placeholder, textarea::placeholder { color: var(--text2); }
-textarea {
-  font-family: var(--mono);
-  font-size: 12.5px;
-  line-height: 1.6;
-  resize: vertical;
-}
-
-/* ── Search bar ── */
-.search-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.search-bar input { flex: 1; }
-
-/* ── File list ── */
-.file-list { display: flex; flex-direction: column; gap: 4px; }
-.file-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.1s, border-color 0.1s;
-}
-.file-item:hover { background: var(--surface2); border-color: #484f58; }
-.file-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
-.file-info { flex: 1; min-width: 0; }
-.file-name {
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.file-meta {
-  font-size: 11px;
-  color: var(--text2);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.file-badge {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 8px;
-  flex-shrink: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-.badge-blue  { background: rgba(88,166,255,0.13); color: var(--accent); }
-.badge-purple{ background: rgba(188,140,255,0.13); color: var(--purple); }
-.badge-orange{ background: rgba(210,153,34,0.13);  color: var(--orange); }
-.badge-green { background: rgba(63,185,80,0.13);   color: var(--green); }
-
-/* ── Editor ── */
-.editor-wrap {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 48px - 36px);
-  gap: 0;
-}
-.editor-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 10px;
-  flex-shrink: 0;
-}
-.editor-filename {
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--accent);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.editor-dirty { font-size: 11px; color: var(--orange); display: none; }
-.editor-dirty.on { display: inline; }
-.editor-textarea {
-  flex: 1;
-  width: 100%;
-  min-height: 300px;
-  padding: 14px 16px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-family: var(--mono);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--text);
-  resize: none;
-  tab-size: 2;
-  outline: none;
-  transition: border-color 0.1s;
-}
-.editor-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.08); }
-.editor-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-top: 10px;
-  font-size: 12px;
-  flex-shrink: 0;
-}
-.editor-status { color: var(--text2); flex: 1; }
-.save-btn { min-width: 92px; justify-content: center; }
-
-/* ── Mem0 ── */
-.mem0-add-form {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 16px;
-}
-.form-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text2);
-  margin-bottom: 8px;
-}
-.mem0-add-form textarea { width: 100%; min-height: 68px; margin-bottom: 9px; }
-.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
-
-.mem0-items { display: flex; flex-direction: column; gap: 6px; }
-.mem0-item {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-}
-.mem0-item.search-result { border-left-color: var(--purple); }
-.mem0-text { font-size: 13px; line-height: 1.55; }
-.mem0-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 7px;
-  font-size: 11px;
-  color: var(--text2);
-}
-.mem0-score { color: var(--green); font-weight: 600; }
-.mem0-id { font-family: var(--mono); }
-
-/* ── Structure ── */
-.tree { font-family: var(--mono); font-size: 12.5px; }
-.tree-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 3px 0;
-  line-height: 1.6;
-}
-.tree-row.indent1 { padding-left: 22px; }
-.tree-row.indent2 { padding-left: 44px; }
-.tree-name { font-weight: 500; color: var(--text); }
-.tree-name.dir { color: var(--accent); }
-.tree-path { font-size: 11px; color: var(--text2); word-break: break-all; }
-.path-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.path-table td { padding: 3px 0; vertical-align: top; }
-.path-table td:first-child { color: var(--text2); white-space: nowrap; padding-right: 14px; }
-.path-table td:last-child { font-family: var(--mono); word-break: break-all; }
-
-/* ── Misc ── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 10px;
-}
-.section-label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text2);
-  margin-bottom: 10px;
-}
-.empty-state {
-  text-align: center;
-  padding: 52px 24px;
-  color: var(--text2);
-}
-.empty-icon { font-size: 34px; margin-bottom: 10px; }
-.empty-state p { font-size: 13.5px; }
-.error-banner {
-  background: rgba(248,81,73,0.07);
-  border: 1px solid rgba(248,81,73,0.3);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  color: var(--red);
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.error-banner .ml-auto { margin-left: auto; }
-
-/* ── Loading ── */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 52px;
-  color: var(--text2);
-  font-size: 13px;
-  gap: 10px;
-}
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.65s linear infinite;
-  flex-shrink: 0;
-}
-.spinner.sm { width: 12px; height: 12px; border-width: 1.5px; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Toast ── */
-.toast {
-  position: fixed;
-  bottom: 18px;
-  right: 18px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  padding: 9px 16px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  z-index: 9999;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity 0.18s, transform 0.18s;
-  pointer-events: none;
-  max-width: 300px;
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-.toast.success { border-color: var(--green); color: var(--green); }
-.toast.error   { border-color: var(--red);   color: var(--red); }
-.toast.info    { border-color: var(--accent); color: var(--accent); }
-
-/* ── Responsive ── */
-@media (max-width: 600px) {
-  .sidebar { width: 52px; min-width: 52px; }
-  .sidebar-header h1, .nav-text, .nav-count, .nav-label, .sidebar-footer { display: none; }
-  .nav-item { justify-content: center; padding: 12px 8px; }
-  .nav-icon { font-size: 17px; }
-  .content { padding: 12px; }
-}
-</style>
-</head>
-<body>
-
-<div class="sidebar">
-  <div class="sidebar-header">
-    <span style="font-size:20px;line-height:1">👩🏻</span>
-    <h1>Lana</h1>
-    <span class="badge">v2</span>
-  </div>
-  <nav class="nav-section">
-    <div class="nav-label">Files</div>
-    <div class="nav-item active" data-tab="skills">
-      <span class="nav-icon">📦</span>
-      <span class="nav-text">Skills</span>
-      <span class="nav-count" id="nc-skills">–</span>
+     1|<!DOCTYPE html>
+     2|<html lang="en">
+     3|<head>
+     4|<meta charset="UTF-8">
+     5|<meta name="viewport" content="width=device-width, initial-scale=1.0">
+     6|<title>Lana Control Panel</title>
+     7|<style>
+     8|:root {
+     9|  --bg: #0d1117;
+    10|  --surface: #161b22;
+    11|  --surface2: #1c2333;
+    12|  --surface3: #21262d;
+    13|  --border: #30363d;
+    14|  --text: #e6edf3;
+    15|  --text2: #8b949e;
+    16|  --accent: #58a6ff;
+    17|  --accent-dim: #1f6feb;
+    18|  --green: #3fb950;
+    19|  --orange: #d29922;
+    20|  --red: #f85149;
+    21|  --purple: #bc8cff;
+    22|  --radius: 7px;
+    23|  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    24|  --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    25|}
+    26|* { box-sizing: border-box; margin: 0; padding: 0; }
+    27|html, body { height: 100%; }
+    28|body {
+    29|  font-family: var(--font);
+    30|  background: var(--bg);
+    31|  color: var(--text);
+    32|  height: 100vh;
+    33|  display: flex;
+    34|  overflow: hidden;
+    35|}
+    36|
+    37|/* scrollbar */
+    38|::-webkit-scrollbar { width: 6px; height: 6px; }
+    39|::-webkit-scrollbar-track { background: transparent; }
+    40|::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    41|::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    42|
+    43|/* ── Sidebar ── */
+    44|.sidebar {
+    45|  width: 220px;
+    46|  min-width: 220px;
+    47|  background: var(--surface);
+    48|  border-right: 1px solid var(--border);
+    49|  display: flex;
+    50|  flex-direction: column;
+    51|  height: 100vh;
+    52|  overflow-y: auto;
+    53|  flex-shrink: 0;
+    54|}
+    55|.sidebar-header {
+    56|  padding: 14px 16px;
+    57|  border-bottom: 1px solid var(--border);
+    58|  display: flex;
+    59|  align-items: center;
+    60|  gap: 8px;
+    61|  flex-shrink: 0;
+    62|}
+    63|.sidebar-header h1 {
+    64|  font-size: 16px;
+    65|  font-weight: 700;
+    66|  letter-spacing: -0.2px;
+    67|}
+    68|.badge {
+    69|  font-size: 10px;
+    70|  background: linear-gradient(135deg, #7c3aed, var(--accent));
+    71|  color: #fff;
+    72|  padding: 2px 7px;
+    73|  border-radius: 10px;
+    74|  font-weight: 600;
+    75|  letter-spacing: 0.3px;
+    76|}
+    77|.nav-section { padding: 6px 0; }
+    78|.nav-label {
+    79|  font-size: 10px;
+    80|  font-weight: 600;
+    81|  text-transform: uppercase;
+    82|  letter-spacing: 0.8px;
+    83|  color: var(--text2);
+    84|  padding: 4px 16px 6px;
+    85|}
+    86|.nav-item {
+    87|  padding: 8px 16px;
+    88|  cursor: pointer;
+    89|  display: flex;
+    90|  align-items: center;
+    91|  gap: 9px;
+    92|  font-size: 13px;
+    93|  color: var(--text2);
+    94|  border-left: 3px solid transparent;
+    95|  transition: background 0.1s, color 0.1s;
+    96|  user-select: none;
+    97|}
+    98|.nav-item:hover { background: var(--surface2); color: var(--text); }
+    99|.nav-item.active {
+   100|  color: var(--text);
+   101|  border-left-color: var(--accent);
+   102|  background: rgba(88,166,255,0.07);
+   103|}
+   104|.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+   105|.nav-text { flex: 1; }
+   106|.nav-count {
+   107|  font-size: 10px;
+   108|  background: var(--surface3);
+   109|  color: var(--text2);
+   110|  padding: 1px 6px;
+   111|  border-radius: 8px;
+   112|  min-width: 18px;
+   113|  text-align: center;
+   114|}
+   115|.sidebar-footer {
+   116|  margin-top: auto;
+   117|  padding: 10px 16px;
+   118|  border-top: 1px solid var(--border);
+   119|  font-size: 11px;
+   120|  color: var(--text2);
+   121|  flex-shrink: 0;
+   122|}
+   123|
+   124|/* ── Main ── */
+   125|.main {
+   126|  flex: 1;
+   127|  display: flex;
+   128|  flex-direction: column;
+   129|  overflow: hidden;
+   130|  min-width: 0;
+   131|}
+   132|.toolbar {
+   133|  padding: 9px 18px;
+   134|  background: var(--surface);
+   135|  border-bottom: 1px solid var(--border);
+   136|  display: flex;
+   137|  align-items: center;
+   138|  gap: 10px;
+   139|  min-height: 48px;
+   140|  flex-shrink: 0;
+   141|}
+   142|.toolbar-back {
+   143|  font-family: var(--font);
+   144|  font-size: 12px;
+   145|  padding: 5px 10px;
+   146|  border-radius: 6px;
+   147|  border: 1px solid var(--border);
+   148|  background: var(--surface2);
+   149|  color: var(--text2);
+   150|  cursor: pointer;
+   151|  display: none;
+   152|  align-items: center;
+   153|  gap: 4px;
+   154|  transition: background 0.1s, color 0.1s;
+   155|  flex-shrink: 0;
+   156|}
+   157|.toolbar-back:hover { color: var(--text); background: var(--surface3); }
+   158|.toolbar-back.visible { display: flex; }
+   159|.toolbar h2 {
+   160|  font-size: 14px;
+   161|  font-weight: 600;
+   162|  flex: 1;
+   163|  min-width: 0;
+   164|  overflow: hidden;
+   165|  text-overflow: ellipsis;
+   166|  white-space: nowrap;
+   167|}
+   168|.toolbar-actions { display: flex; gap: 8px; align-items: center; margin-left: auto; flex-shrink: 0; }
+   169|
+   170|.content {
+   171|  flex: 1;
+   172|  overflow-y: auto;
+   173|  padding: 18px 20px;
+   174|}
+   175|
+   176|/* ── Buttons ── */
+   177|button {
+   178|  font-family: var(--font);
+   179|  font-size: 12.5px;
+   180|  padding: 6px 13px;
+   181|  border-radius: var(--radius);
+   182|  border: 1px solid var(--border);
+   183|  background: var(--surface2);
+   184|  color: var(--text);
+   185|  cursor: pointer;
+   186|  transition: background 0.1s, border-color 0.1s;
+   187|  white-space: nowrap;
+   188|  display: inline-flex;
+   189|  align-items: center;
+   190|  gap: 5px;
+   191|}
+   192|button:hover { background: var(--surface3); border-color: #484f58; }
+   193|button:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+   194|button.primary { background: var(--accent-dim); border-color: var(--accent); color: #fff; }
+   195|button.primary:hover { background: #2a7dd2; }
+   196|button.success { background: rgba(63,185,80,0.12); border-color: var(--green); color: var(--green); }
+   197|button.success:hover { background: rgba(63,185,80,0.2); }
+   198|button.danger { border-color: var(--red); color: var(--red); }
+   199|button.danger:hover { background: rgba(248,81,73,0.1); }
+   200|button.sm { padding: 4px 10px; font-size: 11.5px; }
+   201|
+   202|input, textarea, select {
+   203|  font-family: var(--font);
+   204|  background: var(--bg);
+   205|  border: 1px solid var(--border);
+   206|  color: var(--text);
+   207|  padding: 7px 11px;
+   208|  border-radius: var(--radius);
+   209|  outline: none;
+   210|  font-size: 13px;
+   211|  transition: border-color 0.1s, box-shadow 0.1s;
+   212|}
+   213|input:focus, textarea:focus, select:focus {
+   214|  border-color: var(--accent);
+   215|  box-shadow: 0 0 0 3px rgba(88,166,255,0.1);
+   216|}
+   217|input::placeholder, textarea::placeholder { color: var(--text2); }
+   218|textarea {
+   219|  font-family: var(--mono);
+   220|  font-size: 12.5px;
+   221|  line-height: 1.6;
+   222|  resize: vertical;
+   223|}
+   224|
+   225|/* ── Search bar ── */
+   226|.search-bar {
+   227|  display: flex;
+   228|  gap: 8px;
+   229|  margin-bottom: 14px;
+   230|}
+   231|.search-bar input { flex: 1; }
+   232|
+   233|/* ── File list ── */
+   234|.file-list { display: flex; flex-direction: column; gap: 4px; }
+   235|.file-item {
+   236|  display: flex;
+   237|  align-items: center;
+   238|  gap: 12px;
+   239|  padding: 10px 14px;
+   240|  background: var(--surface);
+   241|  border: 1px solid var(--border);
+   242|  border-radius: var(--radius);
+   243|  cursor: pointer;
+   244|  transition: background 0.1s, border-color 0.1s;
+   245|}
+   246|.file-item:hover { background: var(--surface2); border-color: #484f58; }
+   247|.file-icon { font-size: 16px; flex-shrink: 0; line-height: 1; }
+   248|.file-info { flex: 1; min-width: 0; }
+   249|.file-name {
+   250|  font-size: 13px;
+   251|  font-weight: 500;
+   252|  white-space: nowrap;
+   253|  overflow: hidden;
+   254|  text-overflow: ellipsis;
+   255|}
+   256|.file-meta {
+   257|  font-size: 11px;
+   258|  color: var(--text2);
+   259|  margin-top: 2px;
+   260|  white-space: nowrap;
+   261|  overflow: hidden;
+   262|  text-overflow: ellipsis;
+   263|}
+   264|.file-badge {
+   265|  font-size: 10px;
+   266|  font-weight: 600;
+   267|  padding: 2px 8px;
+   268|  border-radius: 8px;
+   269|  flex-shrink: 0;
+   270|  text-transform: uppercase;
+   271|  letter-spacing: 0.3px;
+   272|}
+   273|.badge-blue  { background: rgba(88,166,255,0.13); color: var(--accent); }
+   274|.badge-purple{ background: rgba(188,140,255,0.13); color: var(--purple); }
+   275|.badge-orange{ background: rgba(210,153,34,0.13);  color: var(--orange); }
+   276|.badge-green { background: rgba(63,185,80,0.13);   color: var(--green); }
+   277|
+   278|/* ── Editor ── */
+   279|.editor-wrap {
+   280|  display: flex;
+   281|  flex-direction: column;
+   282|  height: calc(100vh - 48px - 36px);
+   283|  gap: 0;
+   284|}
+   285|.editor-meta {
+   286|  display: flex;
+   287|  align-items: center;
+   288|  gap: 10px;
+   289|  padding-bottom: 10px;
+   290|  border-bottom: 1px solid var(--border);
+   291|  margin-bottom: 10px;
+   292|  flex-shrink: 0;
+   293|}
+   294|.editor-filename {
+   295|  font-family: var(--mono);
+   296|  font-size: 12px;
+   297|  color: var(--accent);
+   298|  flex: 1;
+   299|  min-width: 0;
+   300|  overflow: hidden;
+   301|  text-overflow: ellipsis;
+   302|  white-space: nowrap;
+   303|}
+   304|.editor-dirty { font-size: 11px; color: var(--orange); display: none; }
+   305|.editor-dirty.on { display: inline; }
+   306|.editor-textarea {
+   307|  flex: 1;
+   308|  width: 100%;
+   309|  min-height: 300px;
+   310|  padding: 14px 16px;
+   311|  background: var(--bg);
+   312|  border: 1px solid var(--border);
+   313|  border-radius: var(--radius);
+   314|  font-family: var(--mono);
+   315|  font-size: 13px;
+   316|  line-height: 1.6;
+   317|  color: var(--text);
+   318|  resize: none;
+   319|  tab-size: 2;
+   320|  outline: none;
+   321|  transition: border-color 0.1s;
+   322|}
+   323|.editor-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(88,166,255,0.08); }
+   324|.editor-footer {
+   325|  display: flex;
+   326|  align-items: center;
+   327|  gap: 8px;
+   328|  padding-top: 10px;
+   329|  font-size: 12px;
+   330|  flex-shrink: 0;
+   331|}
+   332|.editor-status { color: var(--text2); flex: 1; }
+   333|.save-btn { min-width: 92px; justify-content: center; }
+   334|
+   335|/* ── Mem0 ── */
+   336|.mem0-add-form {
+   337|  background: var(--surface);
+   338|  border: 1px solid var(--border);
+   339|  border-radius: var(--radius);
+   340|  padding: 14px;
+   341|  margin-bottom: 16px;
+   342|}
+   343|.form-label {
+   344|  font-size: 11px;
+   345|  font-weight: 600;
+   346|  text-transform: uppercase;
+   347|  letter-spacing: 0.6px;
+   348|  color: var(--text2);
+   349|  margin-bottom: 8px;
+   350|}
+   351|.mem0-add-form textarea { width: 100%; min-height: 68px; margin-bottom: 9px; }
+   352|.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+   353|
+   354|.mem0-items { display: flex; flex-direction: column; gap: 6px; }
+   355|.mem0-item {
+   356|  background: var(--surface);
+   357|  border: 1px solid var(--border);
+   358|  border-left: 3px solid var(--accent);
+   359|  border-radius: var(--radius);
+   360|  padding: 12px 14px;
+   361|}
+   362|.mem0-item.search-result { border-left-color: var(--purple); }
+   363|.mem0-text { font-size: 13px; line-height: 1.55; }
+   364|.mem0-meta {
+   365|  display: flex;
+   366|  flex-wrap: wrap;
+   367|  gap: 12px;
+   368|  margin-top: 7px;
+   369|  font-size: 11px;
+   370|  color: var(--text2);
+   371|}
+   372|.mem0-score { color: var(--green); font-weight: 600; }
+   373|.mem0-id { font-family: var(--mono); }
+   374|
+   375|/* ── Structure ── */
+   376|.tree { font-family: var(--mono); font-size: 12.5px; }
+   377|.tree-row {
+   378|  display: flex;
+   379|  align-items: baseline;
+   380|  gap: 6px;
+   381|  padding: 3px 0;
+   382|  line-height: 1.6;
+   383|}
+   384|.tree-row.indent1 { padding-left: 22px; }
+   385|.tree-row.indent2 { padding-left: 44px; }
+   386|.tree-name { font-weight: 500; color: var(--text); }
+   387|.tree-name.dir { color: var(--accent); }
+   388|.tree-path { font-size: 11px; color: var(--text2); word-break: break-all; }
+   389|.path-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+   390|.path-table td { padding: 3px 0; vertical-align: top; }
+   391|.path-table td:first-child { color: var(--text2); white-space: nowrap; padding-right: 14px; }
+   392|.path-table td:last-child { font-family: var(--mono); word-break: break-all; }
+   393|
+   394|/* ── Misc ── */
+   395|.card {
+   396|  background: var(--surface);
+   397|  border: 1px solid var(--border);
+   398|  border-radius: var(--radius);
+   399|  padding: 16px;
+   400|  margin-bottom: 10px;
+   401|}
+   402|.section-label {
+   403|  font-size: 11px;
+   404|  font-weight: 600;
+   405|  text-transform: uppercase;
+   406|  letter-spacing: 0.6px;
+   407|  color: var(--text2);
+   408|  margin-bottom: 10px;
+   409|}
+   410|.empty-state {
+   411|  text-align: center;
+   412|  padding: 52px 24px;
+   413|  color: var(--text2);
+   414|}
+   415|.empty-icon { font-size: 34px; margin-bottom: 10px; }
+   416|.empty-state p { font-size: 13.5px; }
+   417|.error-banner {
+   418|  background: rgba(248,81,73,0.07);
+   419|  border: 1px solid rgba(248,81,73,0.3);
+   420|  border-radius: var(--radius);
+   421|  padding: 14px 16px;
+   422|  color: var(--red);
+   423|  font-size: 13px;
+   424|  display: flex;
+   425|  align-items: center;
+   426|  gap: 10px;
+   427|  margin-bottom: 10px;
+   428|}
+   429|.error-banner .ml-auto { margin-left: auto; }
+   430|
+   431|/* ── Loading ── */
+   432|.loading {
+   433|  display: flex;
+   434|  align-items: center;
+   435|  justify-content: center;
+   436|  padding: 52px;
+   437|  color: var(--text2);
+   438|  font-size: 13px;
+   439|  gap: 10px;
+   440|}
+   441|.spinner {
+   442|  display: inline-block;
+   443|  width: 16px;
+   444|  height: 16px;
+   445|  border: 2px solid var(--border);
+   446|  border-top-color: var(--accent);
+   447|  border-radius: 50%;
+   448|  animation: spin 0.65s linear infinite;
+   449|  flex-shrink: 0;
+   450|}
+   451|.spinner.sm { width: 12px; height: 12px; border-width: 1.5px; }
+   452|@keyframes spin { to { transform: rotate(360deg); } }
+   453|
+   454|/* ── Toast ── */
+   455|.toast {
+   456|  position: fixed;
+   457|  bottom: 18px;
+   458|  right: 18px;
+   459|  background: var(--surface2);
+   460|  border: 1px solid var(--border);
+   461|  padding: 9px 16px;
+   462|  border-radius: var(--radius);
+   463|  font-size: 13px;
+   464|  z-index: 9999;
+   465|  opacity: 0;
+   466|  transform: translateY(6px);
+   467|  transition: opacity 0.18s, transform 0.18s;
+   468|  pointer-events: none;
+   469|  max-width: 300px;
+   470|}
+   471|.toast.show { opacity: 1; transform: translateY(0); }
+   472|.toast.success { border-color: var(--green); color: var(--green); }
+   473|.toast.error   { border-color: var(--red);   color: var(--red); }
+   474|.toast.info    { border-color: var(--accent); color: var(--accent); }
+   475|
+   476|/* ── Responsive ── */
+   477|@media (max-width: 600px) {
+   478|  .sidebar { width: 52px; min-width: 52px; }
+   479|  .sidebar-header h1, .nav-text, .nav-count, .nav-label, .sidebar-footer { display: none; }
+   480|  .nav-item { justify-content: center; padding: 12px 8px; }
+   481|  .nav-icon { font-size: 17px; }
+   482|  .content { padding: 12px; }
+   483|}
+   484|</style>
+   485|</head>
+   486|<body>
+   487|
+   488|<div class="sidebar">
+   489|  <div class="sidebar-header">
+   490|    <span style="font-size:20px;line-height:1">👩🏻</span>
+   491|    <h1>Lana</h1>
+   492|    <span class="badge">v2</span>
+   493|  </div>
+   494|  <nav class="nav-section">
+   495|    <div class="nav-label">Files</div>
+   496|    <div class="nav-item active" data-tab="skills">
+   497|      <span class="nav-icon">📦</span>
+   498|      <span class="nav-text">Skills</span>
+   499|      <span class="nav-count" id="nc-skills">–</span>
+   500|    </div>
+   501|    <div class="nav-item" data-tab="memory">
+   502|      <span class="nav-icon">📝</span>
+   503|      <span class="nav-text">Memory</span>
+   504|      <span class="nav-count" id="nc-memory">–</span>
+   505|    </div>
+   506|    <div class="nav-item" data-tab="profile">
+   507|      <span class="nav-icon">⚙️</span>
+   508|      <span class="nav-text">Profile</span>
+   509|      <span class="nav-count" id="nc-profile">–</span>
+   510|    </div>
+   511|  </nav>
+   512|  <nav class="nav-section">
+   513|    <div class="nav-label">Phase 1.5 — Continuity</div>
+   514|    <div class="nav-item" data-tab="dreams">
+   515|      <span class="nav-icon">🌙</span>
+   516|      <span class="nav-text">Dreams</span>
+   517|      <span class="nav-count" id="nc-dreams">–</span>
+   518|    </div>
+   519|    <div class="nav-item" data-tab="consolidations">
+   520|      <span class="nav-icon">🔬</span>
+   521|      <span class="nav-text">Consolidation</span>
+   522|      <span class="nav-count" id="nc-consolidations">–</span>
+   523|    </div>
+   524|    <div class="nav-item" data-tab="fallback">
+   525|      <span class="nav-icon">🛡️</span>
+   526|      <span class="nav-text">Fallback</span>
+   527|      <span class="nav-count" id="nc-fallback">–</span>
+   528|    </div>
+   529|    <div class="nav-item" data-tab="timeline">
+   530|      <span class="nav-icon">📅</span>
+   531|      <span class="nav-text">Timeline</span>
+   532|    </div>
+   533|    <div class="nav-item" data-tab="inner-state">
+   534|      <span class="nav-icon">💭</span>
+   535|      <span class="nav-text">Inner State</span>
+   536|    </div>
+   537|    <div class="nav-item" data-tab="roadmap">
+   538|      <span class="nav-icon">🗺️</span>
+   539|      <span class="nav-text">Roadmap</span>
+   540|    </div>
+   541|    <div class="nav-item" data-tab="proposed">
+   542|      <span class="nav-icon">📋</span>
+   543|      <span class="nav-text">Proposed</span>
+   544|      <span class="nav-count" id="nc-proposed">–</span>
+   545|    </div>
+   546|  </nav>
+   547|  <nav class="nav-section">
+   548|    <div class="nav-label">Life State</div>
+    <div class="nav-item" data-tab="life-state">
+      <span class="nav-icon">💗</span>
+      <span class="nav-text">Life State</span>
     </div>
-    <div class="nav-item" data-tab="memory">
-      <span class="nav-icon">📝</span>
-      <span class="nav-text">Memory</span>
-      <span class="nav-count" id="nc-memory">–</span>
-    </div>
-    <div class="nav-item" data-tab="profile">
-      <span class="nav-icon">⚙️</span>
-      <span class="nav-text">Profile</span>
-      <span class="nav-count" id="nc-profile">–</span>
-    </div>
-  </nav>
-  <nav class="nav-section">
-    <div class="nav-label">Phase 1.5 — Continuity</div>
-    <div class="nav-item" data-tab="dreams">
-      <span class="nav-icon">🌙</span>
-      <span class="nav-text">Dreams</span>
-      <span class="nav-count" id="nc-dreams">–</span>
-    </div>
-    <div class="nav-item" data-tab="consolidations">
-      <span class="nav-icon">🔬</span>
-      <span class="nav-text">Consolidation</span>
-      <span class="nav-count" id="nc-consolidations">–</span>
-    </div>
-    <div class="nav-item" data-tab="fallback">
-      <span class="nav-icon">🛡️</span>
-      <span class="nav-text">Fallback</span>
-      <span class="nav-count" id="nc-fallback">–</span>
-    </div>
-    <div class="nav-item" data-tab="timeline">
-      <span class="nav-icon">📅</span>
-      <span class="nav-text">Timeline</span>
-    </div>
-    <div class="nav-item" data-tab="inner-state">
-      <span class="nav-icon">💭</span>
-      <span class="nav-text">Inner State</span>
-    </div>
-    <div class="nav-item" data-tab="roadmap">
-      <span class="nav-icon">🗺️</span>
-      <span class="nav-text">Roadmap</span>
-    </div>
-    <div class="nav-item" data-tab="proposed">
-      <span class="nav-icon">📋</span>
-      <span class="nav-text">Proposed</span>
-      <span class="nav-count" id="nc-proposed">–</span>
-    </div>
-  </nav>
-  <nav class="nav-section">
     <div class="nav-label">Phase 5 — Content</div>
-    <div class="nav-item" data-tab="content">
-      <span class="nav-icon">📸</span>
-      <span class="nav-text">Content</span>
-      <span class="nav-count" id="nc-content">–</span>
-    </div>
-  </nav>
-  <nav class="nav-section">
-    <div class="nav-label">Memory</div>
-    <div class="nav-item" data-tab="mem0">
-      <span class="nav-icon">🧠</span>
-      <span class="nav-text">Mem0</span>
-    </div>
-  </nav>
-  <nav class="nav-section">
-    <div class="nav-label">System</div>
-    <div class="nav-item" data-tab="manual">
-      <span class="nav-icon">📖</span>
-      <span class="nav-text">Manual</span>
-    </div>
-    <div class="nav-item" data-tab="structure">
-      <span class="nav-icon">📂</span>
-      <span class="nav-text">Structure</span>
-    </div>
-  </nav>
-  <div class="sidebar-footer">localhost:3001</div>
-</div>
+   549|    <div class="nav-item" data-tab="content">
+   550|      <span class="nav-icon">📸</span>
+   551|      <span class="nav-text">Content</span>
+   552|      <span class="nav-count" id="nc-content">–</span>
+   553|    </div>
+   554|  </nav>
+   555|  <nav class="nav-section">
+   556|    <div class="nav-label">Memory</div>
+   557|    <div class="nav-item" data-tab="mem0">
+   558|      <span class="nav-icon">🧠</span>
+   559|      <span class="nav-text">Mem0</span>
+   560|    </div>
+   561|  </nav>
+   562|  <nav class="nav-section">
+   563|    <div class="nav-label">System</div>
+   564|    <div class="nav-item" data-tab="manual">
+   565|      <span class="nav-icon">📖</span>
+   566|      <span class="nav-text">Manual</span>
+   567|    </div>
+   568|    <div class="nav-item" data-tab="structure">
+   569|      <span class="nav-icon">📂</span>
+   570|      <span class="nav-text">Structure</span>
+   571|    </div>
+   572|  </nav>
+   573|  <div class="sidebar-footer">localhost:3001</div>
+   574|</div>
+   575|
+   576|<div class="main">
+   577|  <div class="toolbar">
+   578|    <button class="toolbar-back" id="back-btn">← Back</button>
+   579|    <h2 id="toolbar-title">Skills</h2>
+   580|    <div class="toolbar-actions" id="toolbar-actions"></div>
+   581|  </div>
+   582|  <div class="content" id="content">
+   583|    <div class="loading"><span class="spinner"></span>Loading…</div>
+   584|  </div>
+   585|</div>
+   586|
+   587|<div class="toast" id="toast"></div>
+   588|
+   589|<script>
+   590|// ── State ──────────────────────────────────────────────────────
+   591|const S = {
+   592|  tab: 'skills',
+   593|  inEditor: false,
+   594|  saveFn: null,
+   595|  skillsCache: null,
+   596|};
+   597|
+   598|// ── Utilities ──────────────────────────────────────────────────
+   599|const $ = id => document.getElementById(id);
+   600|function esc(s) {
+   601|  if (s == null) return '';
+   602|  return String(s)
+   603|    .replace(/&/g, '&amp;')
+   604|    .replace(/</g, '&lt;')
+   605|    .replace(/>/g, '&gt;')
+   606|    .replace(/"/g, '&quot;');
+   607|}
+   608|function fsize(n) {
+   609|  if (n < 1024) return n + 'B';
+   610|  if (n < 1048576) return (n / 1024).toFixed(1) + 'KB';
+   611|  return (n / 1048576).toFixed(1) + 'MB';
+   612|}
+   613|function setLoading() {
+   614|  $('content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
+   615|}
+   616|function toast(msg, type = 'success') {
+   617|  const t = $('toast');
+   618|  t.textContent = msg;
+   619|  t.className = 'toast ' + type + ' show';
+   620|  clearTimeout(t._t);
+   621|  t._t = setTimeout(() => t.classList.remove('show'), 2800);
+   622|}
+   623|
+   624|async function apiFetch(url, opts = {}) {
+   625|  const r = await fetch(url, opts);
+   626|  if (!r.ok) {
+   627|    const txt = await r.text().catch(() => r.statusText);
+   628|    throw new Error('HTTP ' + r.status + ': ' + txt);
+   629|  }
+   630|  return r.json();
+   631|}
+   632|
+   633|function setToolbar(title, showBack, actionsHtml = '') {
+   634|  $('toolbar-title').textContent = title;
+   635|  const back = $('back-btn');
+   636|  showBack ? back.classList.add('visible') : back.classList.remove('visible');
+   637|  $('toolbar-actions').innerHTML = actionsHtml;
+   638|}
+   639|
+   640|function errorHtml(msg, retryKey) {
+   641|  return `<div class="error-banner">⚠️ ${esc(msg)}
+   642|    <button class="sm ml-auto" onclick="${retryKey}()">Retry</button></div>`;
+   643|}
+   644|
+   645|// ── Navigation ─────────────────────────────────────────────────
+   646|document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
+   647|  el.addEventListener('click', () => {
+   648|    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+   649|    el.classList.add('active');
+   650|    S.tab = el.dataset.tab;
+   651|    S.inEditor = false;
+   652|    loadTab(S.tab);
+   653|  });
+   654|});
+   655|
+   656|$('back-btn').addEventListener('click', () => {
+   657|  S.inEditor = false;
+   658|  loadTab(S.tab);
+   659|});
+   660|
+   661|// ── Tab loader ─────────────────────────────────────────────────
+   662|async function loadTab(tab) {
+   663|  setLoading();
+   664|  try {
+   665|    if (tab === 'skills')    await loadSkills();
+   666|    else if (tab === 'memory')    await loadMemory();
+   667|    else if (tab === 'profile')   await loadProfile();
+   668|    else if (tab === 'mem0')      await loadMem0();
+   669|    else if (tab === 'structure') await loadStructure();
+   670|    else if (tab === 'dreams')        await loadDreams();
+   671|    else if (tab === 'consolidations') await loadConsolidations();
+   672|    else if (tab === 'fallback')      await loadFallback();
+   673|    else if (tab === 'timeline')      await loadTimeline();
+   674|    else if (tab === 'inner-state')   await loadInnerState();
+   675|    else if (tab === 'roadmap')       await loadRoadmap();
+   676|    else if (tab === 'proposed')      await loadProposed();
+   677|    else if (tab === 'content')       await loadContent();
+   678|    else if (tab === 'manual')        await loadManual();
+    else if (tab === 'life-state')          await loadLifeState();
+   679|  } catch (e) {
+   680|    $('content').innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+   681|      <button class="sm ml-auto" onclick="loadTab('${S.tab}')">Retry</button></div>`;
+   682|  }
+   683|}
+   684|
+   685|// ── Skills ────────────────────────────────────────────────────
+   686|async function loadSkills() {
+   687|  const data = await apiFetch('/api/skills');
+   688|  S.skillsCache = data.skills || [];
+   689|  $('nc-skills').textContent = data.count || 0;
+   690|  setToolbar('Skills', false,
+   691|    `<input id="skill-filter" style="width:190px" placeholder="Filter skills…" oninput="filterSkills(this.value)">`
+   692|  );
+   693|  renderSkills(S.skillsCache, '');
+   694|}
+   695|
+   696|function renderSkills(skills, q) {
+   697|  const list = q
+   698|    ? skills.filter(s => s.name.toLowerCase().includes(q.toLowerCase()))
+   699|    : skills;
+   700|
+   701|  if (list.length === 0) {
+   702|    $('content').innerHTML = `<div class="empty-state">
+   703|      <div class="empty-icon">📭</div>
+   704|      <p>${q ? 'No skills match <em>' + esc(q) + '</em>' : 'No skills found in <code>~/.hermes/skills/</code>'}</p>
+   705|    </div>`;
+   706|    return;
+   707|  }
+   708|
+   709|  let html = '<div class="file-list">';
+   710|  for (const sk of list) {
+   711|    const parts = sk.name.split('/');
+   712|    const leaf = parts[parts.length - 1];
+   713|    const cat  = parts.length > 1 ? parts[0] : '';
+   714|    html += `<div class="file-item" onclick="openSkill(${JSON.stringify(sk.path)})">
+   715|      <span class="file-icon">📦</span>
+   716|      <div class="file-info">
+   717|        <div class="file-name">${esc(leaf)}</div>
+   718|        <div class="file-meta">${cat ? esc(cat) + ' · ' : ''}${esc(sk.path)}</div>
+   719|      </div>
+   720|      <span class="file-badge badge-blue">skill</span>
+   721|    </div>`;
+   722|  }
+   723|  html += '</div>';
+   724|  $('content').innerHTML = html;
+   725|}
+   726|
+   727|window.filterSkills = function(q) {
+   728|  if (!S.skillsCache) return;
+   729|  renderSkills(S.skillsCache, q);
+   730|  // restore focus + value
+   731|  const el = $('skill-filter');
+   732|  if (el) { el.value = q; el.focus(); }
+   733|};
+   734|
+   735|async function openSkill(path) {
+   736|  setLoading();
+   737|  let data;
+   738|  try { data = await apiFetch('/api/skills/read?path=' + encodeURIComponent(path)); }
+   739|  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadSkills'); return; }
+   740|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadSkills'); return; }
+   741|  const name = path.split('/').pop();
+   742|  showEditor(path, name, data.content, async txt =>
+   743|    apiFetch('/api/skills/save?path=' + encodeURIComponent(path), {
+   744|      method: 'PUT',
+   745|      headers: {'Content-Type': 'application/json'},
+   746|      body: JSON.stringify({content: txt})
+   747|    })
+   748|  );
+   749|}
+   750|
+   751|// ── Memory Files ──────────────────────────────────────────────
+   752|async function loadMemory() {
+   753|  const data = await apiFetch('/api/memory-files');
+   754|  $('nc-memory').textContent = data.count || 0;
+   755|  setToolbar('Memory Files', false, '');
+   756|  if (!data.files || data.files.length === 0) {
+   757|    $('content').innerHTML = `<div class="empty-state">
+   758|      <div class="empty-icon">📭</div><p>No files found at <code>~/lana_memory/memory/</code></p></div>`;
+   759|    return;
+   760|  }
+   761|  let html = '<div class="file-list">';
+   762|  for (const f of data.files) {
+   763|    html += `<div class="file-item" onclick="openMemFile(${JSON.stringify(f.path)})">
+   764|      <span class="file-icon">📄</span>
+   765|      <div class="file-info">
+   766|        <div class="file-name">${esc(f.name)}</div>
+   767|        <div class="file-meta">${fsize(f.size)}</div>
+   768|      </div>
+   769|      <span class="file-badge badge-purple">md</span>
+   770|    </div>`;
+   771|  }
+   772|  $('content').innerHTML = html + '</div>';
+   773|}
+   774|
+   775|async function openMemFile(path) {
+   776|  setLoading();
+   777|  let data;
+   778|  try { data = await apiFetch('/api/memory-files/read?path=' + encodeURIComponent(path)); }
+   779|  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadMemory'); return; }
+   780|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadMemory'); return; }
+   781|  const name = path.split('/').pop();
+   782|  showEditor(path, name, data.content, async txt =>
+   783|    apiFetch('/api/memory-files/save?path=' + encodeURIComponent(path), {
+   784|      method: 'PUT',
+   785|      headers: {'Content-Type': 'application/json'},
+   786|      body: JSON.stringify({content: txt})
+   787|    })
+   788|  );
+   789|}
+   790|
+   791|// ── Profile Files ─────────────────────────────────────────────
+   792|async function loadProfile() {
+   793|  const data = await apiFetch('/api/profile-files');
+   794|  $('nc-profile').textContent = data.count || 0;
+   795|  setToolbar('Profile Files', false, '');
+   796|  if (!data.files || data.files.length === 0) {
+   797|    $('content').innerHTML = `<div class="empty-state">
+   798|      <div class="empty-icon">📭</div><p>No files found at <code>~/.hermes/profiles/lana/</code></p></div>`;
+   799|    return;
+   800|  }
+   801|  let html = '<div class="file-list">';
+   802|  for (const f of data.files) {
+   803|    const ext = f.name.split('.').pop();
+   804|    const bc = ext === 'yaml' || ext === 'yml' ? 'badge-orange' : ext === 'md' ? 'badge-purple' : 'badge-blue';
+   805|    html += `<div class="file-item" onclick="openProfileFile(${JSON.stringify(f.path)})">
+   806|      <span class="file-icon">⚙️</span>
+   807|      <div class="file-info">
+   808|        <div class="file-name">${esc(f.name)}</div>
+   809|        <div class="file-meta">${fsize(f.size)}</div>
+   810|      </div>
+   811|      <span class="file-badge ${bc}">${esc(ext)}</span>
+   812|    </div>`;
+   813|  }
+   814|  $('content').innerHTML = html + '</div>';
+   815|}
+   816|
+   817|async function openProfileFile(path) {
+   818|  setLoading();
+   819|  let data;
+   820|  try { data = await apiFetch('/api/profile-files/read?path=' + encodeURIComponent(path)); }
+   821|  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadProfile'); return; }
+   822|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadProfile'); return; }
+   823|  const name = path.split('/').pop();
+   824|  showEditor(path, name, data.content, async txt =>
+   825|    apiFetch('/api/profile-files/save?path=' + encodeURIComponent(path), {
+   826|      method: 'PUT',
+   827|      headers: {'Content-Type': 'application/json'},
+   828|      body: JSON.stringify({content: txt})
+   829|    })
+   830|  );
+   831|}
+   832|
+   833|// ── Editor ────────────────────────────────────────────────────
+   834|function showEditor(filePath, name, content, saveFn) {
+   835|  S.inEditor = true;
+   836|  S.saveFn = saveFn;
+   837|  setToolbar(name, true, '');
+   838|
+   839|  $('content').innerHTML = `
+   840|    <div class="editor-wrap">
+   841|      <div class="editor-meta">
+   842|        <span class="editor-filename" title="${esc(filePath)}">${esc(filePath)}</span>
+   843|        <span class="editor-dirty" id="editor-dirty">● unsaved</span>
+   844|      </div>
+   845|      <textarea class="editor-textarea" id="editor" spellcheck="false"></textarea>
+   846|      <div class="editor-footer">
+   847|        <span class="editor-status" id="editor-status">Ctrl+S / Cmd+S to save</span>
+   848|        <button onclick="doBack()">Discard</button>
+   849|        <button class="primary save-btn" id="save-btn" onclick="doSave()">💾 Save</button>
+   850|      </div>
+   851|    </div>
+   852|  `;
+   853|
+   854|  const ta = $('editor');
+   855|  ta.value = content;
+   856|  ta.focus();
+   857|
+   858|  ta.addEventListener('input', () => {
+   859|    $('editor-dirty').classList.add('on');
+   860|  });
+   861|
+   862|  ta.addEventListener('keydown', e => {
+   863|    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+   864|      e.preventDefault();
+   865|      doSave();
+   866|    }
+   867|    if (e.key === 'Tab') {
+   868|      e.preventDefault();
+   869|      const s = ta.selectionStart, end = ta.selectionEnd;
+   870|      ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(end);
+   871|      ta.selectionStart = ta.selectionEnd = s + 2;
+   872|    }
+   873|  });
+   874|}
+   875|
+   876|function doBack() {
+   877|  S.inEditor = false;
+   878|  loadTab(S.tab);
+   879|}
+   880|
+   881|async function doSave() {
+   882|  if (!S.saveFn) return;
+   883|  const btn = $('save-btn');
+   884|  const status = $('editor-status');
+   885|  const text = $('editor').value;
+   886|  btn.disabled = true;
+   887|  btn.innerHTML = '<span class="spinner sm"></span> Saving…';
+   888|  status.textContent = '';
+   889|  status.style.color = '';
+   890|  try {
+   891|    const result = await S.saveFn(text);
+   892|    if (result && result.error) {
+   893|      status.textContent = '✗ ' + result.error;
+   894|      status.style.color = 'var(--red)';
+   895|      toast('Save failed: ' + result.error, 'error');
+   896|      btn.innerHTML = '💾 Save';
+   897|      btn.className = 'primary save-btn';
+   898|    } else {
+   899|      $('editor-dirty').classList.remove('on');
+   900|      status.textContent = '✓ Saved' + (result && result.size ? ' (' + fsize(result.size) + ')' : '');
+   901|      status.style.color = 'var(--green)';
+   902|      btn.innerHTML = '✓ Saved';
+   903|      btn.className = 'success save-btn';
+   904|      toast('Saved!');
+   905|      setTimeout(() => {
+   906|        btn.innerHTML = '💾 Save';
+   907|        btn.className = 'primary save-btn';
+   908|      }, 2200);
+   909|    }
+   910|  } catch (e) {
+   911|    status.textContent = '✗ ' + e.message;
+   912|    status.style.color = 'var(--red)';
+   913|    toast('Save failed: ' + e.message, 'error');
+   914|    btn.innerHTML = '💾 Save';
+   915|    btn.className = 'primary save-btn';
+   916|  }
+   917|  btn.disabled = false;
+   918|}
+   919|
+   920|// ── Mem0 ─────────────────────────────────────────────────────
+   921|async function loadMem0() {
+   922|  setToolbar('Mem0 Memory', false, '');
+   923|  $('content').innerHTML = `
+   924|    <div class="search-bar">
+   925|      <input id="mem0-q" placeholder="Search memories… (Enter to search)"
+   926|        onkeydown="if(event.key==='Enter') doMem0Search()">
+   927|      <button onclick="doMem0Search()">🔍 Search</button>
+   928|      <button class="sm" onclick="loadRecentMem0()">Recent</button>
+   929|    </div>
+   930|    <div class="mem0-add-form">
+   931|      <div class="form-label">Add Memory</div>
+   932|      <textarea id="mem0-new" placeholder="Type a memory to add…"></textarea>
+   933|      <div class="form-actions">
+   934|        <button class="primary sm" id="mem0-add-btn" onclick="doAddMem0()">➕ Add Memory</button>
+   935|      </div>
+   936|    </div>
+   937|    <div id="mem0-list"></div>
+   938|  `;
+   939|  await loadRecentMem0();
+   940|}
+   941|
+   942|async function loadRecentMem0() {
+   943|  const el = $('mem0-list');
+   944|  if (!el) return;
+   945|  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading recent…</div>';
+   946|  try {
+   947|    const data = await apiFetch('/api/mem0/recent');
+   948|    renderMem0Items(data, false);
+   949|  } catch (e) {
+   950|    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+   951|      <button class="sm ml-auto" onclick="loadRecentMem0()">Retry</button></div>`;
+   952|  }
+   953|}
+   954|
+   955|async function doMem0Search() {
+   956|  const el = $('mem0-list');
+   957|  if (!el) return;
+   958|  const q = ($('mem0-q') || {}).value || '';
+   959|  el.innerHTML = '<div class="loading"><span class="spinner"></span>Searching…</div>';
+   960|  try {
+   961|    const data = await apiFetch('/api/mem0/search?q=' + encodeURIComponent(q));
+   962|    renderMem0Items(data, !!q);
+   963|  } catch (e) {
+   964|    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
+   965|      <button class="sm ml-auto" onclick="doMem0Search()">Retry</button></div>`;
+   966|  }
+   967|}
+   968|
+   969|async function doAddMem0() {
+   970|  const ta = $('mem0-new');
+   971|  const btn = $('mem0-add-btn');
+   972|  if (!ta) return;
+   973|  const text = ta.value.trim();
+   974|  if (!text) { toast('Enter some text first', 'error'); return; }
+   975|  btn.disabled = true;
+   976|  btn.textContent = 'Adding…';
+   977|  try {
+   978|    const result = await apiFetch('/api/mem0/add', {
+   979|      method: 'POST',
+   980|      headers: {'Content-Type': 'application/json'},
+   981|      body: JSON.stringify({text})
+   982|    });
+   983|    if (result.error) {
+   984|      toast('Error: ' + result.error, 'error');
+   985|    } else {
+   986|      ta.value = '';
+   987|      toast('Memory added!');
+   988|      await loadRecentMem0();
+   989|    }
+   990|  } catch (e) {
+   991|    toast('Error: ' + e.message, 'error');
+   992|  }
+   993|  btn.disabled = false;
+   994|  btn.textContent = '➕ Add Memory';
+   995|}
+   996|
+   997|function renderMem0Items(data, isSearch) {
+   998|  const el = $('mem0-list');
+   999|  if (!el) return;
+  1000|
+  1001|  if (data && data.error) {
+  1002|    el.innerHTML = `<div class="error-banner">⚠️ ${esc(data.error)}</div>`;
+  1003|    return;
+  1004|  }
+  1005|
+  1006|  let items = [];
+  1007|  if (Array.isArray(data)) items = data;
+  1008|  else if (data && data.results) items = data.results;
+  1009|  else if (data && data.output) {
+  1010|    el.innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-x:auto">${esc(data.output)}</pre></div>`;
+  1011|    return;
+  1012|  }
+  1013|
+  1014|  if (!items.length) {
+  1015|    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧠</div><p>No memories found</p></div>`;
+  1016|    return;
+  1017|  }
+  1018|
+  1019|  const label = items.length + (isSearch ? ' result' : ' recent') + (items.length !== 1 ? 's' : '');
+  1020|  let html = `<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">${label}</div><div class="mem0-items">`;
+  1021|  for (const item of items) {
+  1022|    const text  = item.memory || item.text || JSON.stringify(item);
+  1023|    const score = item.score != null ? parseFloat(item.score).toFixed(3) : null;
+  1024|    const date  = item.created_at ? new Date(item.created_at).toLocaleString() : '';
+  1025|    html += `<div class="mem0-item${isSearch ? ' search-result' : ''}">
+  1026|      <div class="mem0-text">${esc(text)}</div>
+  1027|      <div class="mem0-meta">
+  1028|        ${score !== null ? `<span class="mem0-score">score ${score}</span>` : ''}
+  1029|        ${date ? `<span>${date}</span>` : ''}
+  1030|        ${item.id ? `<span class="mem0-id">${item.id.slice(0, 8)}</span>` : ''}
+  1031|      </div>
+  1032|    </div>`;
+  1033|  }
+  1034|  el.innerHTML = html + '</div>';
+  1035|}
+  1036|
+  1037|// ── Structure ─────────────────────────────────────────────────
+  1038|async function loadStructure() {
+  1039|  const data = await apiFetch('/api/structure');
+  1040|  setToolbar('Structure', false, '');
+  1041|
+  1042|  function tr(icon, name, isBold, path, indent) {
+  1043|    const ind = indent ? ` indent${indent}` : '';
+  1044|    const bold = isBold ? ' style="font-weight:600"' : '';
+  1045|    return `<div class="tree-row${ind}">
+  1046|      <span>${icon}</span>
+  1047|      <span class="tree-name${isBold ? ' dir' : ''}"${bold}>${esc(name)}</span>
+  1048|      ${path ? `<span class="tree-path">${esc(path)}</span>` : ''}
+  1049|    </div>`;
+  1050|  }
+  1051|
+  1052|  $('content').innerHTML = `
+  1053|    <div class="card" style="margin-bottom:14px">
+  1054|      <div class="section-label" style="margin-bottom:12px">Directory tree</div>
+  1055|      <div class="tree">
+  1056|        ${tr('📁', 'lana_memory/', true, data.lana_memory_dir, 0)}
+  1057|        ${tr('📁', 'memory/', false, data.memory_files_dir, 1)}
+  1058|        ${tr('📁', 'chroma_db/', false, data.mem0_dir, 1)}
+  1059|        ${tr('🐍', 'lana_memory.py', false, '', 1)}
+  1060|        <div style="height:6px"></div>
+  1061|        ${tr('📁', '.hermes/profiles/lana/', true, data.profile_dir, 0)}
+  1062|        ${tr('📄', 'SOUL.md', false, '', 1)}
+  1063|        ${tr('⚙️', 'config.yaml', false, '', 1)}
+  1064|        ${tr('📄', 'memory_prefill.md', false, '', 1)}
+  1065|        <div style="height:6px"></div>
+  1066|        ${tr('📁', '.hermes/skills/', true, data.skills_dir, 0)}
+  1067|      </div>
+  1068|    </div>
+  1069|    <div class="card">
+  1070|      <div class="section-label" style="margin-bottom:10px">Full paths</div>
+  1071|      <table class="path-table">
+  1072|        <tr><td>Memory files</td><td>${esc(data.memory_files_dir)}</td></tr>
+  1073|        <tr><td>Profile dir</td><td>${esc(data.profile_dir)}</td></tr>
+  1074|        <tr><td>Skills dir</td><td>${esc(data.skills_dir)}</td></tr>
+  1075|        <tr><td>Lana memory root</td><td>${esc(data.lana_memory_dir)}</td></tr>
+  1076|        <tr><td>Chroma DB</td><td>${esc(data.mem0_dir)}</td></tr>
+  1077|      </table>
+  1078|    </div>
+  1079|  `;
+  1080|}
+  1081|
+  1082|// ── Phase 1.5: Dreams ────────────────────────────────────────────────
+  1083|async function loadDreams() {
+  1084|  const data = await apiFetch('/api/dreams');
+  1085|  $('nc-dreams').textContent = data.count || 0;
+  1086|  setToolbar('Dreams', false, '');
+  1087|  if (!data.files || data.files.length === 0) {
+  1088|    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🌙</div><p>No dream files yet. Run <code>python dream_cycle.py --event "..."</code></p></div>`;
+  1089|    return;
+  1090|  }
+  1091|  let html = '<div class="file-list">';
+  1092|  for (const f of data.files) {
+  1093|    const dt = f.name.replace('dream_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
+  1094|    html += `<div class="file-item" onclick="openDream(${JSON.stringify(f.path)})">
+  1095|      <span class="file-icon">🌙</span>
+  1096|      <div class="file-info">
+  1097|        <div class="file-name">${esc(dt)}</div>
+  1098|        <div class="file-meta">${fsize(f.size)}</div>
+  1099|      </div>
+  1100|      <button class="sm danger" onclick="event.stopPropagation();deleteDreamFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
+  1101|    </div>`;
+  1102|  }
+  1103|  $('content').innerHTML = html + '</div>';
+  1104|}
+  1105|
+  1106|async function openDream(path) {
+  1107|  setLoading();
+  1108|  let data;
+  1109|  try { data = await apiFetch('/api/dreams/read?path=' + encodeURIComponent(path)); }
+  1110|  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadDreams'); return; }
+  1111|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadDreams'); return; }
+  1112|  const name = path.split('/').pop();
+  1113|  S.inEditor = true;
+  1114|  setToolbar(name, true, '');
+  1115|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1116|}
+  1117|
+  1118|async function deleteDreamFile(path) {
+  1119|  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
+  1120|  try {
+  1121|    await apiFetch('/api/dreams/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
+  1122|    toast('Deleted');
+  1123|    loadDreams();
+  1124|  } catch(e) { toast(e.message, 'error'); }
+  1125|}
+  1126|
+  1127|// ── Phase 1.5: Consolidations ─────────────────────────────────────────
+  1128|
+  1129|async function loadConsolidations() {
+  1130|  const data = await apiFetch('/api/consolidations');
+  1131|  $('nc-consolidations').textContent = data.count || 0;
+  1132|  setToolbar('Consolidations', false, '');
+  1133|  if (!data.files || data.files.length === 0) {
+  1134|    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><p>No consolidation reports yet. Run <code>python consolidate_memory.py</code></p></div>`;
+  1135|    return;
+  1136|  }
+  1137|  let html = '<div class="file-list">';
+  1138|  for (const f of data.files) {
+  1139|    const dt = f.name.replace('consolidation_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
+  1140|    html += `<div class="file-item" onclick="openConsolidation(${JSON.stringify(f.path)})">
+  1141|      <span class="file-icon">🔬</span>
+  1142|      <div class="file-info">
+  1143|        <div class="file-name">${esc(dt)}</div>
+  1144|        <div class="file-meta">${fsize(f.size)}</div>
+  1145|      </div>
+  1146|      <button class="sm danger" onclick="event.stopPropagation();deleteConsolidationFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
+  1147|    </div>`;
+  1148|  }
+  1149|  $('content').innerHTML = html + '</div>';
+  1150|}
+  1151|
+  1152|async function openConsolidation(path) {
+  1153|  setLoading();
+  1154|  let data;
+  1155|  try { data = await apiFetch('/api/consolidations/read?path=' + encodeURIComponent(path)); }
+  1156|  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadConsolidations'); return; }
+  1157|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadConsolidations'); return; }
+  1158|  const name = path.split('/').pop();
+  1159|  S.inEditor = true;
+  1160|  setToolbar(name, true, '');
+  1161|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1162|}
+  1163|
+  1164|async function deleteConsolidationFile(path) {
+  1165|  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
+  1166|  try {
+  1167|    await apiFetch('/api/consolidations/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
+  1168|    toast('Deleted');
+  1169|    loadConsolidations();
+  1170|  } catch(e) { toast(e.message, 'error'); }
+  1171|}
+  1172|
+  1173|// ── Phase 1.5: Fallback ───────────────────────────────────────────────
+  1174|
+  1175|async function loadFallback() {
+  1176|  setToolbar('Fallback Memories', false,
+  1177|    `<button class="danger sm" onclick="clearFallback()">🗑 Clear All</button>`
+  1178|  );
+  1179|  let data;
+  1180|  try { data = await apiFetch('/api/fallback-memories'); }
+  1181|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadFallback'); return; }
+  1182|  $('nc-fallback').textContent = data.count || 0;
+  1183|  if (!data.memories || data.memories.length === 0) {
+  1184|    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🛡️</div><p>No fallback memories. They appear when DeepSeek extraction is temporarily unavailable.</p></div>`;
+  1185|    return;
+  1186|  }
+  1187|  let html = '<div class="mem0-items">';
+  1188|  for (const m of data.memories) {
+  1189|    const id = m.id || '';
+  1190|    const text = m.memory || JSON.stringify(m);
+  1191|    const reason = m.reason ? `<span class="mem0-score" style="background:rgba(210,153,34,0.15);color:var(--orange)">${esc(m.reason)}</span>` : '';
+  1192|    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+  1193|    html += `<div class="mem0-item">
+  1194|      <div class="mem0-text">${esc(text)}</div>
+  1195|      <div class="mem0-meta">
+  1196|        ${reason}
+  1197|        <span>${date}</span>
+  1198|        <span class="mem0-id">${id.slice(0,12)}</span>
+  1199|        <button class="sm danger" style="margin-left:auto" onclick="deleteFallbackMem('${id}')">🗑</button>
+  1200|      </div>
+  1201|    </div>`;
+  1202|  }
+  1203|  $('content').innerHTML = html + '</div>';
+  1204|}
+  1205|
+  1206|async function deleteFallbackMem(id) {
+  1207|  try {
+  1208|    await apiFetch('/api/fallback-memories/delete?memory_id=' + encodeURIComponent(id), {method:'DELETE'});
+  1209|    toast('Removed');
+  1210|    loadFallback();
+  1211|  } catch(e) { toast(e.message, 'error'); }
+  1212|}
+  1213|
+  1214|async function clearFallback() {
+  1215|  if (!confirm('Clear ALL fallback memories?')) return;
+  1216|  try {
+  1217|    await apiFetch('/api/fallback-memories/clear', {method:'DELETE'});
+  1218|    toast('Cleared');
+  1219|    loadFallback();
+  1220|  } catch(e) { toast(e.message, 'error'); }
+  1221|}
+  1222|
+  1223|// ── Phase 1.5: Timeline ───────────────────────────────────────────────
+  1224|
+  1225|async function loadTimeline() {
+  1226|  setToolbar('Timeline', false,
+  1227|    `<button class="primary sm" id="timeline-edit-btn" onclick="editTimeline()">✏️ Edit</button>`
+  1228|  );
+  1229|  let data;
+  1230|  try { data = await apiFetch('/api/timeline'); }
+  1231|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadTimeline'); return; }
+  1232|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadTimeline'); return; }
+  1233|  S._timelineContent = data.content;
+  1234|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1235|}
+  1236|
+  1237|function editTimeline() {
+  1238|  if (!S._timelineContent) return;
+  1239|  showEditor(String(TIMELINE_PATH || '/Users/fernandoserina/lana_memory/timeline.md'), 'timeline.md', S._timelineContent, async txt =>
+  1240|    apiFetch('/api/timeline/save', {
+  1241|      method: 'PUT',
+  1242|      headers: {'Content-Type': 'application/json'},
+  1243|      body: JSON.stringify({content: txt})
+  1244|    })
+  1245|  );
+  1246|}
+  1247|const TIMELINE_PATH = '/Users/fernandoserina/lana_memory/timeline.md';
+  1248|
+  1249|// ── Phase 1.5: Inner State ────────────────────────────────────────────
+  1250|
+  1251|async function loadInnerState() {
+  1252|  setToolbar('Inner State', false,
+  1253|    `<button class="primary sm" id="inner-edit-btn" onclick="editInnerState()">✏️ Edit</button>`
+  1254|  );
+  1255|  let data;
+  1256|  try { data = await apiFetch('/api/inner-state'); }
+  1257|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadInnerState'); return; }
+  1258|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadInnerState'); return; }
+  1259|  S._innerStateContent = data.content;
+  1260|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1261|}
+  1262|
+  1263|function editInnerState() {
+  1264|  if (!S._innerStateContent) return;
+  1265|  showEditor('/Users/fernandoserina/lana_memory/inner_state.md', 'inner_state.md', S._innerStateContent, async txt =>
+  1266|    apiFetch('/api/inner-state/save', {
+  1267|      method: 'PUT',
+  1268|      headers: {'Content-Type': 'application/json'},
+  1269|      body: JSON.stringify({content: txt})
+  1270|    })
+  1271|  );
+  1272|}
+  1273|
+  1274|// ── Phase 1.5: Roadmap ────────────────────────────────────────────────
+  1275|
+  1276|async function loadRoadmap() {
+  1277|  setToolbar('Roadmap', false, '');
+  1278|  let data;
+  1279|  try { data = await apiFetch('/api/roadmap'); }
+  1280|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadRoadmap'); return; }
+  1281|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadRoadmap'); return; }
+  1282|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1283|}
+  1284|
+  1285|
+  1286|// ── Phase 2: Proposed Memories (Approval-Gated) ────────────────────────
+  1287|
+  1288|const STATUS_FILTERS = ['proposed', 'approved', 'rejected', 'all'];
+  1289|S.proposedStatus = 'proposed';
+  1290|
+  1291|async function loadProposed() {
+  1292|  setToolbar('Proposed Memories', false,
+  1293|    `<select id="prop-status-filter" onchange="changeProposedFilter(this.value)" style="width:110px;font-size:12px">
+  1294|      ${STATUS_FILTERS.map(s => `<option value="${s}" ${s===S.proposedStatus?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
+  1295|    </select>
+  1296|    <button class="success sm" id="btn-approve-all" onclick="approveAllProposed()">✅ Approve All</button>
+  1297|    <button class="danger sm" id="btn-reject-all" onclick="rejectAllProposed()">❌ Reject All</button>
+  1298|    <button class="sm" style="color:var(--text2)" onclick="clearResolvedProposed()">🧹 Clear Resolved</button>`
+  1299|  );
+  1300|  await fetchProposed();
+  1301|}
+  1302|
+  1303|function changeProposedFilter(val) {
+  1304|  S.proposedStatus = val;
+  1305|  fetchProposed();
+  1306|}
+  1307|
+  1308|async function fetchProposed() {
+  1309|  let data;
+  1310|  try { data = await apiFetch('/api/proposed-memories?status=' + S.proposedStatus); }
+  1311|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadProposed'); return; }
+  1312|
+  1313|  $('nc-proposed').textContent = data.counts ? data.counts.proposed : 0;
+  1314|
+  1315|  const mems = data.memories || [];
+  1316|  if (mems.length === 0) {
+  1317|    $('content').innerHTML = `<div class="empty-state">
+  1318|      <div class="empty-icon">📋</div>
+  1319|      <p>${S.proposedStatus === 'proposed' ? 'No proposed memories pending review. Run dream_cycle.py or consolidate_memory.py to generate proposals.' : 'No ' + S.proposedStatus + ' memories.'}</p>
+  1320|    </div>`;
+  1321|    return;
+  1322|  }
+  1323|
+  1324|  let html = `<div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:var(--text2)">
+  1325|    <span>🟡 Proposed: ${data.counts.proposed}</span>
+  1326|    <span>🟢 Approved: ${data.counts.approved}</span>
+  1327|    <span>🔴 Rejected: ${data.counts.rejected}</span>
+  1328|  </div><div class="mem0-items">`;
+  1329|
+  1330|  for (const m of mems) {
+  1331|    const statusColor = m.status === 'approved' ? 'var(--green)' : m.status === 'rejected' ? 'var(--red)' : 'var(--orange)';
+  1332|    const statusIcon = m.status === 'approved' ? '✅' : m.status === 'rejected' ? '❌' : '🟡';
+  1333|    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
+  1334|    const resolved = m.resolved_at ? ` · resolved ${new Date(m.resolved_at).toLocaleString()}` : '';
+  1335|    const typeBadge = m.type === 'dream' ? '🌙dream' : '🔬consolidation';
+  1336|
+  1337|    html += `<div class="mem0-item" style="border-left:3px solid ${statusColor}">
+  1338|      <div class="mem0-text">${esc(m.memory)}</div>
+  1339|      <div class="mem0-meta">
+  1340|        <span style="color:${statusColor}">${statusIcon} ${m.status}</span>
+  1341|        <span>${typeBadge}</span>
+  1342|        <span>${date}${resolved}</span>
+  1343|        <span class="mem0-id">${(m.id||'').slice(0,8)}</span>
+  1344|        <span style="font-size:10.5px;color:var(--text2)" title="${esc(m.source)}">${esc(m.source.slice(0,30))}</span>
+  1345|      </div>`;
+  1346|
+  1347|    if (m.status === 'proposed') {
+  1348|      html += `<div style="display:flex;gap:6px;margin-top:8px">
+  1349|        <button class="success sm" onclick="approveProposed('${m.id}')">✅ Approve</button>
+  1350|        <button class="danger sm" onclick="rejectProposed('${m.id}')">❌ Reject</button>
+  1351|      </div>`;
+  1352|    }
+  1353|
+  1354|    html += `</div>`;
+  1355|  }
+  1356|
+  1357|  $('content').innerHTML = html + '</div>';
+  1358|
+  1359|  // Hide batch buttons if no proposed items in view
+  1360|  const hasProposed = mems.some(m => m.status === 'proposed');
+  1361|  const btnAll = $('btn-approve-all');
+  1362|  const btnRej = $('btn-reject-all');
+  1363|  if (btnAll) btnAll.style.display = hasProposed ? '' : 'none';
+  1364|  if (btnRej) btnRej.style.display = hasProposed ? '' : 'none';
+  1365|}
+  1366|
+  1367|async function approveProposed(id) {
+  1368|  try {
+  1369|    const data = await apiFetch('/api/proposed-memories/approve', {
+  1370|      method: 'POST',
+  1371|      headers: {'Content-Type': 'application/json'},
+  1372|      body: JSON.stringify({memory_id: id})
+  1373|    });
+  1374|    if (data.error) { toast(data.error, 'error'); return; }
+  1375|    toast('✅ Approved & saved to Mem0!');
+  1376|    fetchProposed();
+  1377|  } catch(e) { toast(e.message, 'error'); }
+  1378|}
+  1379|
+  1380|async function rejectProposed(id) {
+  1381|  try {
+  1382|    const data = await apiFetch('/api/proposed-memories/reject', {
+  1383|      method: 'POST',
+  1384|      headers: {'Content-Type': 'application/json'},
+  1385|      body: JSON.stringify({memory_id: id})
+  1386|    });
+  1387|    if (data.error) { toast(data.error, 'error'); return; }
+  1388|    toast('❌ Rejected');
+  1389|    fetchProposed();
+  1390|  } catch(e) { toast(e.message, 'error'); }
+  1391|}
+  1392|
+  1393|async function approveAllProposed() {
+  1394|  if (!confirm('Approve ALL proposed memories? Each will be saved to Mem0.')) return;
+  1395|  try {
+  1396|    const data = await apiFetch('/api/proposed-memories/approve-all', {method:'POST'});
+  1397|    toast(`✅ Approved ${data.approved_count} memories!`);
+  1398|    fetchProposed();
+  1399|  } catch(e) { toast(e.message, 'error'); }
+  1400|}
+  1401|
+  1402|async function rejectAllProposed() {
+  1403|  if (!confirm('Reject ALL proposed memories?')) return;
+  1404|  try {
+  1405|    const data = await apiFetch('/api/proposed-memories/reject-all', {method:'POST'});
+  1406|    toast(`❌ Rejected ${data.rejected_count} memories`);
+  1407|    fetchProposed();
+  1408|  } catch(e) { toast(e.message, 'error'); }
+  1409|}
+  1410|
+  1411|async function clearResolvedProposed() {
+  1412|  if (!confirm('Remove all approved/rejected entries, keeping only proposed?')) return;
+  1413|  try {
+  1414|    await apiFetch('/api/proposed-memories/clear-resolved', {method:'DELETE'});
+  1415|    toast('Cleaned up!');
+  1416|    fetchProposed();
+  1417|  } catch(e) { toast(e.message, 'error'); }
+  1418|}
+  1419|
+  1420|
+  1421|// ── Phase 5: Content & Embodiment ────────────────────────────────────
+  1422|
+  1423|async function loadContent() {
+  1424|  setToolbar('Content Studio', false,
+  1425|    `<select id="content-subtab" onchange="switchContentSubtab(this.value)" style="width:150px;font-size:12px">
+  1426|      <option value="gallery">🖼️ Gallery</option>
+  1427|      <option value="references">🧬 References</option>
+  1428|      <option value="visual">🎨 Visual Identity</option>
+  1429|      <option value="strategy">📋 Strategy</option>
+  1430|      <option value="voice">🎤 Voice Guide</option>
+  1431|      <option value="generate">✨ Generate Prompt</option>
+  1432|    </select>`
+  1433|  );
+  1434|  await switchContentSubtab('gallery');
+  1435|}
+  1436|
+  1437|async function switchContentSubtab(sub) {
+  1438|  S.contentSubtab = sub;
+  1439|  $('content-subtab').value = sub;
+  1440|  if (sub === 'gallery')     await showContentGallery();
+  1441|  else if (sub === 'references') await showReferenceLibrary();
+  1442|  else if (sub === 'visual') await showVisualIdentity();
+  1443|  else if (sub === 'strategy') await showContentStrategy();
+  1444|  else if (sub === 'voice')  await showVoiceGuide();
+  1445|  else if (sub === 'generate') await showPromptGenerator();
+  1446|}
+  1447|
+  1448|async function showContentGallery() {
+  1449|  let data;
+  1450|  try { data = await apiFetch('/api/content-catalog'); }
+  1451|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  1452|
+  1453|  $('nc-content').textContent = data.image_count || 0;
+  1454|
+  1455|  let html = `<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
+  1456|    <span>🖼️ ${data.image_count} images</span>
+  1457|    <span>✅ ${data.passed_count} passed QC</span>
+  1458|    ${data.has_visual_identity ? '<span>🎨 Visual Identity ✓</span>' : '<span style="color:var(--red)">🎨 Visual Identity missing</span>'}
+  1459|    ${data.has_content_strategy ? '<span>📋 Strategy ✓</span>' : '<span style="color:var(--red)">📋 Strategy missing</span>'}
+  1460|    ${data.has_voice_guide ? '<span>🎤 Voice Guide ✓</span>' : '<span style="color:var(--red)">🎤 Voice Guide missing</span>'}
+  1461|  </div>`;
+  1462|
+  1463|  if (!data.images || data.images.length === 0) {
+  1464|    html += `<div class="empty-state">
+  1465|      <div class="empty-icon">📸</div>
+  1466|      <p>No images generated yet. Use Higgsfield or the Generate tab to create Lana's first photos.</p>
+  1467|    </div>`;
+  1468|  } else {
+  1469|    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">`;
+  1470|    for (const img of data.images) {
+  1471|      const status = img.passed_qc ? '✅' : '❌';
+  1472|      const cat = img.category || 'unknown';
+  1473|      const brief = (img.brief || '').slice(0, 60);
+  1474|      const date = img.created_at ? new Date(img.created_at).toLocaleDateString() : '';
+  1475|      const imgUrl = `/api/images/${img.filename}`;
+  1476|      html += `<div class="card" style="padding:12px">
+  1477|        <div style="position:relative;margin-bottom:8px;background:var(--surface3);border-radius:4px;overflow:hidden;cursor:pointer" onclick="viewFullImage('${imgUrl}')">
+  1478|          <img src="${imgUrl}" alt="${esc(img.filename)}" loading="lazy"
+  1479|               style="width:100%;height:300px;object-fit:cover;display:block"
+  1480|               onerror="this.parentElement.innerHTML='<div style=\\'padding:60px 20px;text-align:center;color:var(--text2)\\'><div style=\\'font-size:32px\\'>🖼️</div><div style=\\'font-size:11px;margin-top:8px\\'>Image not found</div></div>'">
+  1481|        </div>
+  1482|        <div style="font-size:11px;color:var(--text2);margin-bottom:3px">${status} ${cat} · ${date}</div>
+  1483|        <div style="font-size:12px;margin-bottom:2px;word-break:break-word">${esc(img.filename)}</div>
+  1484|        ${brief ? `<div style="font-size:11px;color:var(--text2)">${esc(brief)}</div>` : ''}
+  1485|        ${img.qc_notes ? `<div style="font-size:10px;color:var(--orange);margin-top:4px">${esc(img.qc_notes)}</div>` : ''}
+  1486|        <div style="margin-top:8px;display:flex;gap:4px">
+  1487|          <button class="sm success" onclick="qcImage('${img.filename}',true)">✅ Pass</button>
+  1488|          <button class="sm danger" onclick="qcImage('${img.filename}',false)">❌ Fail</button>
+  1489|        </div>
+  1490|      </div>`;
+  1491|    }
+  1492|    html += `</div>`;
+  1493|  }
+  1494|  $('content').innerHTML = html;
+  1495|}
+  1496|
+  1497|async function qcImage(filename, passed) {
+  1498|  const notes = passed ? 'QC passed' : prompt('Rejection reason?');
+  1499|  if (!passed && !notes) return;
+  1500|  try {
+  1501|    await apiFetch('/api/content/qc-update', {
+  1502|      method: 'POST',
+  1503|      headers: {'Content-Type': 'application/json'},
+  1504|      body: JSON.stringify({filename, passed_qc: passed, qc_notes: notes || 'QC passed'})
+  1505|    });
+  1506|    toast(passed ? '✅ QC passed' : '❌ QC failed');
+  1507|    showContentGallery();
+  1508|  } catch(e) { toast(e.message, 'error'); }
+  1509|}
+  1510|
+  1511|function viewFullImage(url) {
+  1512|  const overlay = document.createElement('div');
+  1513|  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  1514|  overlay.onclick = () => overlay.remove();
+  1515|  const img = document.createElement('img');
+  1516|  img.src = url;
+  1517|  img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px;box-shadow:0 0 40px rgba(0,0,0,0.5)';
+  1518|  overlay.appendChild(img);
+  1519|  document.body.appendChild(overlay);
+  1520|  // Close on Escape
+  1521|  const onKey = (e) => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }};
+  1522|  document.addEventListener('keydown', onKey);
+  1523|}
+  1524|
+  1525|async function showReferenceLibrary() {
+  1526|  let data;
+  1527|  try { data = await apiFetch('/api/identity-references'); }
+  1528|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  1529|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  1530|
+  1531|  $('nc-content').textContent = data.count || 0;
+  1532|  const directory = data.directory || '/Users/fernandoserina/.hermes/profiles/lana/home/lana-identity-references';
+  1533|  let html = `
+  1534|    <div class="card" style="margin-bottom:16px">
+  1535|      <div class="section-label">Active Reference Folder</div>
+  1536|      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);word-break:break-all;margin-bottom:12px">${esc(directory)}</div>
+  1537|      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  1538|        <input id="ref-upload-input" type="file" accept="image/png,image/jpeg,image/webp" multiple style="max-width:380px">
+  1539|        <button class="primary sm" id="ref-upload-btn" onclick="uploadReferenceImages()">➕ Add Pictures</button>
+  1540|        <button class="sm" onclick="showReferenceLibrary()">↻ Refresh</button>
+  1541|      </div>
+  1542|      <div style="font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.5">
+  1543|        Add/remove pictures Lana can use as active identity references. Remove archives the file under <code>invalid/</code> instead of deleting it forever.
+  1544|      </div>
+  1545|    </div>
+  1546|    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
+  1547|      <span>🧬 ${data.count || 0} active references</span>
+  1548|      <span>✅ Valid files only: PNG/JPG/JPEG/WEBP</span>
+  1549|    </div>`;
+  1550|
+  1551|  if (!data.images || data.images.length === 0) {
+  1552|    html += `<div class="empty-state"><div class="empty-icon">🧬</div><p>No active reference images found.</p></div>`;
+  1553|  } else {
+  1554|    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">`;
+  1555|    for (const ref of data.images) {
+  1556|      const date = ref.modified_at ? new Date(ref.modified_at).toLocaleString() : '';
+  1557|      html += `<div class="card" style="padding:12px">
+  1558|        <div style="position:relative;margin-bottom:8px;background:var(--surface3);border-radius:4px;overflow:hidden;cursor:pointer" onclick="viewFullImage('${ref.url}')">
+  1559|          <img src="${ref.url}" alt="${esc(ref.filename)}" loading="lazy"
+  1560|               style="width:100%;height:240px;object-fit:cover;display:block"
+  1561|               onerror="this.parentElement.innerHTML='<div style=\\'padding:60px 20px;text-align:center;color:var(--text2)\\'><div style=\\'font-size:32px\\'>🧬</div><div style=\\'font-size:11px;margin-top:8px\\'>Reference not found</div></div>'">
+  1562|        </div>
+  1563|        <div style="font-size:12px;margin-bottom:3px;word-break:break-word">${esc(ref.filename)}</div>
+  1564|        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${fsize(ref.size)}${date ? ' · ' + esc(date) : ''}</div>
+  1565|        <div style="display:flex;gap:6px;flex-wrap:wrap">
+  1566|          <button class="sm" onclick="event.stopPropagation(); navigator.clipboard.writeText('${esc(ref.filename)}').then(()=>toast('Filename copied'))">📋 Copy name</button>
+  1567|          <button class="sm danger" onclick="event.stopPropagation(); removeReferenceImage('${esc(ref.filename)}')">🗄️ Remove</button>
+  1568|        </div>
+  1569|      </div>`;
+  1570|    }
+  1571|    html += `</div>`;
+  1572|  }
+  1573|  $('content').innerHTML = html;
+  1574|}
+  1575|
+  1576|function readFileAsDataURL(file) {
+  1577|  return new Promise((resolve, reject) => {
+  1578|    const reader = new FileReader();
+  1579|    reader.onload = () => resolve(reader.result);
+  1580|    reader.onerror = () => reject(reader.error || new Error('Could not read file'));
+  1581|    reader.readAsDataURL(file);
+  1582|  });
+  1583|}
+  1584|
+  1585|async function uploadReferenceImages() {
+  1586|  const input = $('ref-upload-input');
+  1587|  const btn = $('ref-upload-btn');
+  1588|  if (!input || !input.files || input.files.length === 0) { toast('Choose image files first', 'error'); return; }
+  1589|  btn.disabled = true;
+  1590|  btn.textContent = 'Uploading…';
+  1591|  let uploaded = 0;
+  1592|  try {
+  1593|    for (const file of input.files) {
+  1594|      if (!file.type.startsWith('image/')) throw new Error(file.name + ' is not an image');
+  1595|      const dataUrl = await readFileAsDataURL(file);
+  1596|      const res = await apiFetch('/api/identity-references/upload', {
+  1597|        method: 'POST',
+  1598|        headers: {'Content-Type': 'application/json'},
+  1599|        body: JSON.stringify({filename: file.name, data_url: dataUrl})
+  1600|      });
+  1601|      if (res.error) throw new Error(res.error);
+  1602|      uploaded++;
+  1603|    }
+  1604|    toast(`Uploaded ${uploaded} reference${uploaded === 1 ? '' : 's'}`);
+  1605|    await showReferenceLibrary();
+  1606|  } catch(e) {
+  1607|    toast('Upload failed: ' + e.message, 'error');
+  1608|  }
+  1609|  btn.disabled = false;
+  1610|  btn.textContent = '➕ Add Pictures';
+  1611|}
+  1612|
+  1613|async function removeReferenceImage(filename) {
+  1614|  if (!confirm(`Remove ${filename} from Lana's active reference library?\n\nIt will be archived under invalid/, not permanently deleted.`)) return;
+  1615|  try {
+  1616|    const res = await apiFetch('/api/identity-references/' + encodeURIComponent(filename), {method:'DELETE'});
+  1617|    if (res.error) { toast(res.error, 'error'); return; }
+  1618|    toast('Archived ' + filename);
+  1619|    await showReferenceLibrary();
+  1620|  } catch(e) {
+  1621|    toast('Remove failed: ' + e.message, 'error');
+  1622|  }
+  1623|}
+  1624|
+  1625|async function showVisualIdentity() {
+  1626|  let data;
+  1627|  try { data = await apiFetch('/api/content/visual-identity'); }
+  1628|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  1629|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  1630|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1631|}
+  1632|
+  1633|async function showContentStrategy() {
+  1634|  let data;
+  1635|  try { data = await apiFetch('/api/content/content-strategy'); }
+  1636|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  1637|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  1638|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1639|}
+  1640|
+  1641|async function showVoiceGuide() {
+  1642|  let data;
+  1643|  try { data = await apiFetch('/api/content/voice-guide'); }
+  1644|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
+  1645|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
+  1646|  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
+  1647|}
+  1648|
+  1649|async function showPromptGenerator() {
+  1650|  $('content').innerHTML = `
+  1651|    <div class="card" style="margin-bottom:16px">
+  1652|      <div class="section-label" style="margin-bottom:10px">Generate Image Prompt</div>
+  1653|      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+  1654|        <select id="gen-category" style="width:140px">
+  1655|          <option value="casual">Casual Everyday</option>
+  1656|          <option value="cosy">Cosy at Home</option>
+  1657|          <option value="going_out">Going Out / Content</option>
+  1658|          <option value="coastal">Coastal Irish</option>
+  1659|        </select>
+  1660|        <input id="gen-brief" placeholder="Scene: gaming with tea..." style="flex:1;min-width:200px">
+  1661|      </div>
+  1662|      <button class="primary sm" onclick="doGeneratePrompt()">✨ Generate Prompt</button>
+  1663|      <button class="sm" style="margin-left:8px" onclick="copyPrompt()">📋 Copy</button>
+  1664|    </div>
+  1665|    <div class="card">
+  1666|      <div class="section-label" style="margin-bottom:8px">Generated Prompt</div>
+  1667|      <pre id="gen-output" style="font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;line-height:1.5;color:var(--text2)">Click Generate to create a prompt...</pre>
+  1668|    </div>
+  1669|  `;
+  1670|  S._lastPrompt = '';
+  1671|}
+  1672|
+  1673|async function doGeneratePrompt() {
+  1674|  const cat = $('gen-category').value;
+  1675|  const brief = $('gen-brief').value;
+  1676|  const out = $('gen-output');
+  1677|  out.textContent = 'Generating...';
+  1678|  try {
+  1679|    const data = await apiFetch('/api/content/generate-prompt?category=' + cat + '&brief=' + encodeURIComponent(brief));
+  1680|    if (data.error) { out.textContent = 'Error: ' + data.error; return; }
+  1681|    S._lastPrompt = data.prompt;
+  1682|    out.textContent = data.prompt;
+  1683|  } catch(e) { out.textContent = 'Error: ' + e.message; }
+  1684|}
+  1685|
+  1686|function copyPrompt() {
+  1687|  if (!S._lastPrompt) { toast('Generate a prompt first', 'error'); return; }
+  1688|  navigator.clipboard.writeText(S._lastPrompt).then(() => toast('Copied!'));
+  1689|}
+  1690|
+  1691|
+  1692|// ── Manual ────────────────────────────────────────────────────
+  1693|
+  1694|async function loadManual() {
+  1695|  setToolbar('📖 Lana System Manual', false, '');
+  1696|  let data;
+  1697|  try { data = await apiFetch('/api/manual'); }
+  1698|  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadManual'); return; }
+  1699|  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadManual'); return; }
+  1700|
+  1701|  const html = renderMarkdown(data.content);
+  1702|  $('content').innerHTML = `<div class="card" style="padding:24px 32px;max-width:900px">
+  1703|    <div style="font-size:10px;color:var(--text2);margin-bottom:12px">
+  1704|      ${esc(data.path)} · ${(data.size / 1024).toFixed(1)} KB
+  1705|    </div>
+  1706|    <div class="manual-content">${html}</div>
+  1707|  </div>`;
+  1708|}
+  1709|
+  1710|function renderMarkdown(md) {
+  1711|  let html = esc(md);
+  1712|  // Headings
+  1713|  html = html.replace(/^#### (.+)$/gm, '<h4 style="font-size:13px;font-weight:700;margin:16px 0 4px;color:var(--purple)">$1</h4>');
+  1714|  html = html.replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;margin:20px 0 6px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:4px">$1</h3>');
+  1715|  html = html.replace(/^## (.+)$/gm, '<h2 style="font-size:18px;font-weight:700;margin:28px 0 10px;color:var(--text)">$1</h2>');
+  1716|  html = html.replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;margin:32px 0 12px;color:var(--text);letter-spacing:-0.3px">$1</h1>');
+  1717|  // Bold / italic
+  1718|  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  1719|  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  1720|  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  1721|  // Inline code
+  1722|  html = html.replace(/`([^`]+)`/g, '<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12px">$1</code>');
+  1723|  // Code blocks
+  1724|  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre style="background:var(--surface3);padding:12px 16px;border-radius:var(--radius);overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.5;margin:12px 0;border:1px solid var(--border)">$2</pre>');
+  1725|  // Horizontal rules
+  1726|  html = html.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0">');
+  1727|  // Tables
+  1728|  html = html.replace(/^\|(.+)\|$/gm, function(m) {
+  1729|    const cells = m.split('|').filter(c => c.trim()).map(c => c.trim());
+  1730|    if (cells.every(c => /^[-:]+$/.test(c))) return '<!-- sep -->';
+  1731|    const isHeader = m.includes('---');
+  1732|    const tag = isHeader ? 'th' : 'td';
+  1733|    return '<tr>' + cells.map(c => `<${tag} style="padding:4px 12px;border:1px solid var(--border);text-align:left;font-size:12px">${c}</${tag}>`).join('') + '</tr>';
+  1734|  });
+  1735|  // Wrap table rows
+  1736|  html = html.replace(/(<tr>[\s\S]*?<\/tr>)\n(?=<tr>)/g, '$1');
+  1737|  html = html.replace(/((?:<tr>[\s\S]*?<\/tr>\n?)+)/g, '<table style="border-collapse:collapse;margin:12px 0;width:100%">$1</table>');
+  1738|  // Lists
+  1739|  html = html.replace(/^- (.+)$/gm, '<li style="margin:2px 0 2px 20px;font-size:13px">$1</li>');
+  1740|  html = html.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\n?)+)/g, '<ul style="margin:8px 0">$1</ul>');
+  1741|  // Paragraphs (double newlines)
+  1742|  html = html.replace(/\n\n/g, '</p><p style="margin:8px 0;font-size:13px;line-height:1.6">');
+  1743|  html = '<p style="margin:8px 0;font-size:13px;line-height:1.6">' + html + '</p>';
+  1744|  // Clean up empty paragraphs
+  1745|  html = html.replace(/<p[^>]*><\/p>/g, '');
+  1746|  html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
+  1747|  // Clean up separator comments
+  1748|  html = html.replace(/<!-- sep -->/g, '');
+  1749|
+  1750|  return html;
+  1751|}
+  1752|
+  1753|
+  1754|
+// ── Life State ──
 
-<div class="main">
-  <div class="toolbar">
-    <button class="toolbar-back" id="back-btn">← Back</button>
-    <h2 id="toolbar-title">Skills</h2>
-    <div class="toolbar-actions" id="toolbar-actions"></div>
-  </div>
-  <div class="content" id="content">
-    <div class="loading"><span class="spinner"></span>Loading…</div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-// ── State ──────────────────────────────────────────────────────
-const S = {
-  tab: 'skills',
-  inEditor: false,
-  saveFn: null,
-  skillsCache: null,
-};
-
-// ── Utilities ──────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-function esc(s) {
-  if (s == null) return '';
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-function fsize(n) {
-  if (n < 1024) return n + 'B';
-  if (n < 1048576) return (n / 1024).toFixed(1) + 'KB';
-  return (n / 1048576).toFixed(1) + 'MB';
-}
-function setLoading() {
-  $('content').innerHTML = '<div class="loading"><span class="spinner"></span>Loading…</div>';
-}
-function toast(msg, type = 'success') {
-  const t = $('toast');
-  t.textContent = msg;
-  t.className = 'toast ' + type + ' show';
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-async function apiFetch(url, opts = {}) {
-  const r = await fetch(url, opts);
-  if (!r.ok) {
-    const txt = await r.text().catch(() => r.statusText);
-    throw new Error('HTTP ' + r.status + ': ' + txt);
-  }
-  return r.json();
-}
-
-function setToolbar(title, showBack, actionsHtml = '') {
-  $('toolbar-title').textContent = title;
-  const back = $('back-btn');
-  showBack ? back.classList.add('visible') : back.classList.remove('visible');
-  $('toolbar-actions').innerHTML = actionsHtml;
-}
-
-function errorHtml(msg, retryKey) {
-  return `<div class="error-banner">⚠️ ${esc(msg)}
-    <button class="sm ml-auto" onclick="${retryKey}()">Retry</button></div>`;
-}
-
-// ── Navigation ─────────────────────────────────────────────────
-document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
-  el.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-    S.tab = el.dataset.tab;
-    S.inEditor = false;
-    loadTab(S.tab);
-  });
-});
-
-$('back-btn').addEventListener('click', () => {
+async function loadLifeState() {
   S.inEditor = false;
-  loadTab(S.tab);
-});
-
-// ── Tab loader ─────────────────────────────────────────────────
-async function loadTab(tab) {
-  setLoading();
+  $('toolbar-title').textContent = 'Life State';
+  $('back-btn').classList.remove('visible');
   try {
-    if (tab === 'skills')    await loadSkills();
-    else if (tab === 'memory')    await loadMemory();
-    else if (tab === 'profile')   await loadProfile();
-    else if (tab === 'mem0')      await loadMem0();
-    else if (tab === 'structure') await loadStructure();
-    else if (tab === 'dreams')        await loadDreams();
-    else if (tab === 'consolidations') await loadConsolidations();
-    else if (tab === 'fallback')      await loadFallback();
-    else if (tab === 'timeline')      await loadTimeline();
-    else if (tab === 'inner-state')   await loadInnerState();
-    else if (tab === 'roadmap')       await loadRoadmap();
-    else if (tab === 'proposed')      await loadProposed();
-    else if (tab === 'content')       await loadContent();
-    else if (tab === 'manual')        await loadManual();
-  } catch (e) {
-    $('content').innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
-      <button class="sm ml-auto" onclick="loadTab('${S.tab}')">Retry</button></div>`;
-  }
+    const d = await apiFetch('/api/life/state');
+    if (d.error) { $('content').innerHTML = `<div class="error-banner">⚠ ${esc(d.error)}</div>`; return; }
+
+    let html = '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">';
+    html += '<button class="primary life-sub-btn" onclick="showLifeSub(\'state\')">Current State</button>';
+    html += '<button class="life-sub-btn" onclick="showLifeSub(\'events\')">Life Events</button>';
+    html += '<button class="life-sub-btn" onclick="showLifeSub(\'scenes\')">Scene Ledger</button>';
+    html += '<button class="life-sub-btn" onclick="showLifeSub(\'controls\')">Controls</button>';
+    html += '</div>';
+
+    // Subtabs
+    html += '<div id="life-sub-state">';
+    html += '<div class="card"><div style="font-size:13px">';
+    for (const [k,v] of Object.entries(d)) {
+      if (v === null || v === '' || (Array.isArray(v) && v.length === 0)) continue;
+      const val = Array.isArray(v) ? v.join(', ') : (typeof v === 'boolean' ? (v?'yes':'no') : String(v));
+      html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)"><span style="color:var(--text2);font-weight:500">'+esc(k.replace(/_/g,' '))+'</span><span style="max-width:55%;text-align:right;word-break:break-word">'+esc(val)+'</span></div>';
+    }
+    html += '</div></div>';
+    html += '<button onclick="doLifeTick()" class="primary" style="margin-top:10px">▶ Run State Tick</button>';
+    html += '</div>';
+
+    html += '<div id="life-sub-events" style="display:none"><div id="life-events-list"><div class="loading"><span class="spinner"></span> Loading...</div></div></div>';
+    html += '<div id="life-sub-scenes" style="display:none"><div id="life-scenes-list"><div class="loading"><span class="spinner"></span> Loading...</div></div></div>';
+    html += '<div id="life-sub-controls" style="display:none">';
+    html += '<div class="card"><div class="section-label">Add Life Event</div><div style="display:flex;flex-direction:column;gap:8px">';
+    html += '<input id="life-event-summary" placeholder="What happened?">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">';
+    html += '<div><label style="font-size:11px;color:var(--text2)">Type</label><input id="life-event-type" style="width:150px" value="conversation_moment"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2)">Mood</label><input id="life-event-mood" style="width:130px" placeholder="mood,comma"></div>';
+    html += '<div style="flex:1"><label style="font-size:11px;color:var(--text2)">Focus</label><input id="life-event-focus" style="width:100%" placeholder="Focus"></div>';
+    html += '<button onclick="doAddLifeEvent()" class="primary">✓ Add Event</button>';
+    html += '</div></div></div>';
+    html += '</div>';
+
+    $('content').innerHTML = html;
+  } catch(e) { $('content').innerHTML = `<div class="error-banner">⚠ ${esc(e.message)}<button class="sm ml-auto" onclick="loadLifeState()">Retry</button></div>`; }
 }
 
-// ── Skills ────────────────────────────────────────────────────
-async function loadSkills() {
-  const data = await apiFetch('/api/skills');
-  S.skillsCache = data.skills || [];
-  $('nc-skills').textContent = data.count || 0;
-  setToolbar('Skills', false,
-    `<input id="skill-filter" style="width:190px" placeholder="Filter skills…" oninput="filterSkills(this.value)">`
-  );
-  renderSkills(S.skillsCache, '');
-}
-
-function renderSkills(skills, q) {
-  const list = q
-    ? skills.filter(s => s.name.toLowerCase().includes(q.toLowerCase()))
-    : skills;
-
-  if (list.length === 0) {
-    $('content').innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div>
-      <p>${q ? 'No skills match <em>' + esc(q) + '</em>' : 'No skills found in <code>~/.hermes/skills/</code>'}</p>
-    </div>`;
-    return;
-  }
-
-  let html = '<div class="file-list">';
-  for (const sk of list) {
-    const parts = sk.name.split('/');
-    const leaf = parts[parts.length - 1];
-    const cat  = parts.length > 1 ? parts[0] : '';
-    html += `<div class="file-item" onclick="openSkill(${JSON.stringify(sk.path)})">
-      <span class="file-icon">📦</span>
-      <div class="file-info">
-        <div class="file-name">${esc(leaf)}</div>
-        <div class="file-meta">${cat ? esc(cat) + ' · ' : ''}${esc(sk.path)}</div>
-      </div>
-      <span class="file-badge badge-blue">skill</span>
-    </div>`;
-  }
-  html += '</div>';
-  $('content').innerHTML = html;
-}
-
-window.filterSkills = function(q) {
-  if (!S.skillsCache) return;
-  renderSkills(S.skillsCache, q);
-  // restore focus + value
-  const el = $('skill-filter');
-  if (el) { el.value = q; el.focus(); }
-};
-
-async function openSkill(path) {
-  setLoading();
-  let data;
-  try { data = await apiFetch('/api/skills/read?path=' + encodeURIComponent(path)); }
-  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadSkills'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadSkills'); return; }
-  const name = path.split('/').pop();
-  showEditor(path, name, data.content, async txt =>
-    apiFetch('/api/skills/save?path=' + encodeURIComponent(path), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: txt})
-    })
-  );
-}
-
-// ── Memory Files ──────────────────────────────────────────────
-async function loadMemory() {
-  const data = await apiFetch('/api/memory-files');
-  $('nc-memory').textContent = data.count || 0;
-  setToolbar('Memory Files', false, '');
-  if (!data.files || data.files.length === 0) {
-    $('content').innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div><p>No files found at <code>~/lana_memory/memory/</code></p></div>`;
-    return;
-  }
-  let html = '<div class="file-list">';
-  for (const f of data.files) {
-    html += `<div class="file-item" onclick="openMemFile(${JSON.stringify(f.path)})">
-      <span class="file-icon">📄</span>
-      <div class="file-info">
-        <div class="file-name">${esc(f.name)}</div>
-        <div class="file-meta">${fsize(f.size)}</div>
-      </div>
-      <span class="file-badge badge-purple">md</span>
-    </div>`;
-  }
-  $('content').innerHTML = html + '</div>';
-}
-
-async function openMemFile(path) {
-  setLoading();
-  let data;
-  try { data = await apiFetch('/api/memory-files/read?path=' + encodeURIComponent(path)); }
-  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadMemory'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadMemory'); return; }
-  const name = path.split('/').pop();
-  showEditor(path, name, data.content, async txt =>
-    apiFetch('/api/memory-files/save?path=' + encodeURIComponent(path), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: txt})
-    })
-  );
-}
-
-// ── Profile Files ─────────────────────────────────────────────
-async function loadProfile() {
-  const data = await apiFetch('/api/profile-files');
-  $('nc-profile').textContent = data.count || 0;
-  setToolbar('Profile Files', false, '');
-  if (!data.files || data.files.length === 0) {
-    $('content').innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📭</div><p>No files found at <code>~/.hermes/profiles/lana/</code></p></div>`;
-    return;
-  }
-  let html = '<div class="file-list">';
-  for (const f of data.files) {
-    const ext = f.name.split('.').pop();
-    const bc = ext === 'yaml' || ext === 'yml' ? 'badge-orange' : ext === 'md' ? 'badge-purple' : 'badge-blue';
-    html += `<div class="file-item" onclick="openProfileFile(${JSON.stringify(f.path)})">
-      <span class="file-icon">⚙️</span>
-      <div class="file-info">
-        <div class="file-name">${esc(f.name)}</div>
-        <div class="file-meta">${fsize(f.size)}</div>
-      </div>
-      <span class="file-badge ${bc}">${esc(ext)}</span>
-    </div>`;
-  }
-  $('content').innerHTML = html + '</div>';
-}
-
-async function openProfileFile(path) {
-  setLoading();
-  let data;
-  try { data = await apiFetch('/api/profile-files/read?path=' + encodeURIComponent(path)); }
-  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadProfile'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadProfile'); return; }
-  const name = path.split('/').pop();
-  showEditor(path, name, data.content, async txt =>
-    apiFetch('/api/profile-files/save?path=' + encodeURIComponent(path), {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: txt})
-    })
-  );
-}
-
-// ── Editor ────────────────────────────────────────────────────
-function showEditor(filePath, name, content, saveFn) {
-  S.inEditor = true;
-  S.saveFn = saveFn;
-  setToolbar(name, true, '');
-
-  $('content').innerHTML = `
-    <div class="editor-wrap">
-      <div class="editor-meta">
-        <span class="editor-filename" title="${esc(filePath)}">${esc(filePath)}</span>
-        <span class="editor-dirty" id="editor-dirty">● unsaved</span>
-      </div>
-      <textarea class="editor-textarea" id="editor" spellcheck="false"></textarea>
-      <div class="editor-footer">
-        <span class="editor-status" id="editor-status">Ctrl+S / Cmd+S to save</span>
-        <button onclick="doBack()">Discard</button>
-        <button class="primary save-btn" id="save-btn" onclick="doSave()">💾 Save</button>
-      </div>
-    </div>
-  `;
-
-  const ta = $('editor');
-  ta.value = content;
-  ta.focus();
-
-  ta.addEventListener('input', () => {
-    $('editor-dirty').classList.add('on');
+function showLifeSub(sub) {
+  document.querySelectorAll('.life-sub-btn').forEach(b => b.classList.remove('primary'));
+  if (event && event.target) event.target.classList.add('primary');
+  ['state','events','scenes','controls'].forEach(s => {
+    const el = document.getElementById('life-sub-'+s);
+    if (el) el.style.display = s === sub ? '' : 'none';
   });
+  if (sub === 'events') fetchLifeEvents();
+  if (sub === 'scenes') fetchLifeScenes();
+}
 
-  ta.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      doSave();
+function doLifeTick() {
+  fetch('/api/life/tick', {method:'POST'}).then(r=>r.json()).then(d => {
+    showToast(d.error ? '⚠ '+(d.error||d.output||'') : '✓ Tick applied', d.error ? 'error' : 'success');
+    loadLifeState();
+  }).catch(e => showToast('⚠ '+e.message, 'error'));
+}
+
+async function fetchLifeEvents() {
+  try {
+    const d = await apiFetch('/api/life/events?limit=50');
+    const evts = d.events || [];
+    const el = document.getElementById('life-events-list');
+    if (!el) return;
+    if (!evts.length) { el.innerHTML = '<div class="empty-state"><p>No life events yet.</p></div>'; return; }
+    let html = '';
+    for (const e of evts.reverse()) {
+      const bc = e.event_type==='state_tick' ? 'var(--accent)' : e.event_type==='operator_correction' ? 'var(--orange)' : 'var(--green)';
+      const ts = (e.timestamp||'').replace('T',' ').split('.')[0];
+      html += '<div class="mem0-item" style="border-left-color:'+bc+'"><div class="mem0-text">'+esc(e.summary)+'</div>';
+      html += '<div class="mem0-meta"><span>'+esc(e.event_type)+'</span><span>'+esc(ts)+'</span>'+(e.source?'<span>'+esc(e.source)+'</span>':'')+'</div></div>';
     }
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const s = ta.selectionStart, end = ta.selectionEnd;
-      ta.value = ta.value.slice(0, s) + '  ' + ta.value.slice(end);
-      ta.selectionStart = ta.selectionEnd = s + 2;
+    el.innerHTML = html;
+  } catch(e) { const el = document.getElementById('life-events-list'); if(el) el.innerHTML = '<div class="error-banner">⚠ '+e.message+'</div>'; }
+}
+
+async function fetchLifeScenes() {
+  try {
+    const d = await apiFetch('/api/life/scenes');
+    const scenes = d.scenes || [];
+    const el = document.getElementById('life-scenes-list');
+    if (!el) return;
+    if (!scenes.length) { el.innerHTML = '<div class="empty-state"><p>No scenes yet.</p></div>'; return; }
+    let html = '<div style="margin-bottom:10px;font-size:12px;color:var(--text2)">Active: '+esc(d.active_scene_id||'none')+'</div>';
+    for (const s of scenes) {
+      const img_count = (s.images||[]).length;
+      html += '<div class="card"><div style="font-weight:600;font-size:14px">'+esc(s.id);
+      if (s.id === d.active_scene_id) html += ' <span class="badge">active</span>';
+      html += '</div><div style="font-size:12px;color:var(--text2);margin-top:4px">Status: '+esc(s.status)+'</div>';
+      html += '<div style="font-size:12px;margin-top:4px">Setting: '+esc(s.setting||'—')+'</div>';
+      html += '<div style="font-size:12px">Outfit: '+esc(s.outfit||'—')+'</div>';
+      html += '<div style="font-size:12px">Images: '+img_count+'</div>';
+      html += '<button onclick="doSetActiveScene(\''+esc(s.id).replace(/'/g,"\\'")+'\')" class="sm primary" style="margin-top:8px">Set Active</button></div>';
     }
-  });
+    el.innerHTML = html;
+  } catch(e) { const el = document.getElementById('life-scenes-list'); if(el) el.innerHTML = '<div class="error-banner">⚠ '+e.message+'</div>'; }
 }
 
-function doBack() {
-  S.inEditor = false;
-  loadTab(S.tab);
+function doSetActiveScene(id) {
+  fetch('/api/life/scenes/active?scene_id='+encodeURIComponent(id), {method:'POST'}).then(r=>r.json()).then(d => {
+    showToast(d.error ? '⚠ '+d.error : '✓ Active scene set', d.error ? 'error' : 'success');
+    fetchLifeScenes();
+  }).catch(e => showToast('⚠ '+e.message, 'error'));
 }
 
-async function doSave() {
-  if (!S.saveFn) return;
-  const btn = $('save-btn');
-  const status = $('editor-status');
-  const text = $('editor').value;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner sm"></span> Saving…';
-  status.textContent = '';
-  status.style.color = '';
-  try {
-    const result = await S.saveFn(text);
-    if (result && result.error) {
-      status.textContent = '✗ ' + result.error;
-      status.style.color = 'var(--red)';
-      toast('Save failed: ' + result.error, 'error');
-      btn.innerHTML = '💾 Save';
-      btn.className = 'primary save-btn';
-    } else {
-      $('editor-dirty').classList.remove('on');
-      status.textContent = '✓ Saved' + (result && result.size ? ' (' + fsize(result.size) + ')' : '');
-      status.style.color = 'var(--green)';
-      btn.innerHTML = '✓ Saved';
-      btn.className = 'success save-btn';
-      toast('Saved!');
-      setTimeout(() => {
-        btn.innerHTML = '💾 Save';
-        btn.className = 'primary save-btn';
-      }, 2200);
-    }
-  } catch (e) {
-    status.textContent = '✗ ' + e.message;
-    status.style.color = 'var(--red)';
-    toast('Save failed: ' + e.message, 'error');
-    btn.innerHTML = '💾 Save';
-    btn.className = 'primary save-btn';
-  }
-  btn.disabled = false;
+function doAddLifeEvent() {
+  const summary = document.getElementById('life-event-summary').value;
+  if (!summary) { showToast('Enter a summary','error'); return; }
+  const body = {
+    summary,
+    type: document.getElementById('life-event-type').value || 'conversation_moment',
+    source: 'whitemesa',
+    mood: document.getElementById('life-event-mood').value,
+    focus: document.getElementById('life-event-focus').value
+  };
+  fetch('/api/life/events', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)})
+    .then(r=>r.json()).then(d => {
+      showToast(d.error ? '⚠ '+(d.error||d.output||'') : '✓ Event added', d.error ? 'error' : 'success');
+      document.getElementById('life-event-summary').value = '';
+      fetchLifeEvents();
+    }).catch(e => showToast('⚠ '+e.message, 'error'));
 }
-
-// ── Mem0 ─────────────────────────────────────────────────────
-async function loadMem0() {
-  setToolbar('Mem0 Memory', false, '');
-  $('content').innerHTML = `
-    <div class="search-bar">
-      <input id="mem0-q" placeholder="Search memories… (Enter to search)"
-        onkeydown="if(event.key==='Enter') doMem0Search()">
-      <button onclick="doMem0Search()">🔍 Search</button>
-      <button class="sm" onclick="loadRecentMem0()">Recent</button>
-    </div>
-    <div class="mem0-add-form">
-      <div class="form-label">Add Memory</div>
-      <textarea id="mem0-new" placeholder="Type a memory to add…"></textarea>
-      <div class="form-actions">
-        <button class="primary sm" id="mem0-add-btn" onclick="doAddMem0()">➕ Add Memory</button>
-      </div>
-    </div>
-    <div id="mem0-list"></div>
-  `;
-  await loadRecentMem0();
-}
-
-async function loadRecentMem0() {
-  const el = $('mem0-list');
-  if (!el) return;
-  el.innerHTML = '<div class="loading"><span class="spinner"></span>Loading recent…</div>';
-  try {
-    const data = await apiFetch('/api/mem0/recent');
-    renderMem0Items(data, false);
-  } catch (e) {
-    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
-      <button class="sm ml-auto" onclick="loadRecentMem0()">Retry</button></div>`;
-  }
-}
-
-async function doMem0Search() {
-  const el = $('mem0-list');
-  if (!el) return;
-  const q = ($('mem0-q') || {}).value || '';
-  el.innerHTML = '<div class="loading"><span class="spinner"></span>Searching…</div>';
-  try {
-    const data = await apiFetch('/api/mem0/search?q=' + encodeURIComponent(q));
-    renderMem0Items(data, !!q);
-  } catch (e) {
-    el.innerHTML = `<div class="error-banner">⚠️ ${esc(e.message)}
-      <button class="sm ml-auto" onclick="doMem0Search()">Retry</button></div>`;
-  }
-}
-
-async function doAddMem0() {
-  const ta = $('mem0-new');
-  const btn = $('mem0-add-btn');
-  if (!ta) return;
-  const text = ta.value.trim();
-  if (!text) { toast('Enter some text first', 'error'); return; }
-  btn.disabled = true;
-  btn.textContent = 'Adding…';
-  try {
-    const result = await apiFetch('/api/mem0/add', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text})
-    });
-    if (result.error) {
-      toast('Error: ' + result.error, 'error');
-    } else {
-      ta.value = '';
-      toast('Memory added!');
-      await loadRecentMem0();
-    }
-  } catch (e) {
-    toast('Error: ' + e.message, 'error');
-  }
-  btn.disabled = false;
-  btn.textContent = '➕ Add Memory';
-}
-
-function renderMem0Items(data, isSearch) {
-  const el = $('mem0-list');
-  if (!el) return;
-
-  if (data && data.error) {
-    el.innerHTML = `<div class="error-banner">⚠️ ${esc(data.error)}</div>`;
-    return;
-  }
-
-  let items = [];
-  if (Array.isArray(data)) items = data;
-  else if (data && data.results) items = data.results;
-  else if (data && data.output) {
-    el.innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12px;white-space:pre-wrap;overflow-x:auto">${esc(data.output)}</pre></div>`;
-    return;
-  }
-
-  if (!items.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">🧠</div><p>No memories found</p></div>`;
-    return;
-  }
-
-  const label = items.length + (isSearch ? ' result' : ' recent') + (items.length !== 1 ? 's' : '');
-  let html = `<div style="font-size:11.5px;color:var(--text2);margin-bottom:8px">${label}</div><div class="mem0-items">`;
-  for (const item of items) {
-    const text  = item.memory || item.text || JSON.stringify(item);
-    const score = item.score != null ? parseFloat(item.score).toFixed(3) : null;
-    const date  = item.created_at ? new Date(item.created_at).toLocaleString() : '';
-    html += `<div class="mem0-item${isSearch ? ' search-result' : ''}">
-      <div class="mem0-text">${esc(text)}</div>
-      <div class="mem0-meta">
-        ${score !== null ? `<span class="mem0-score">score ${score}</span>` : ''}
-        ${date ? `<span>${date}</span>` : ''}
-        ${item.id ? `<span class="mem0-id">${item.id.slice(0, 8)}</span>` : ''}
-      </div>
-    </div>`;
-  }
-  el.innerHTML = html + '</div>';
-}
-
-// ── Structure ─────────────────────────────────────────────────
-async function loadStructure() {
-  const data = await apiFetch('/api/structure');
-  setToolbar('Structure', false, '');
-
-  function tr(icon, name, isBold, path, indent) {
-    const ind = indent ? ` indent${indent}` : '';
-    const bold = isBold ? ' style="font-weight:600"' : '';
-    return `<div class="tree-row${ind}">
-      <span>${icon}</span>
-      <span class="tree-name${isBold ? ' dir' : ''}"${bold}>${esc(name)}</span>
-      ${path ? `<span class="tree-path">${esc(path)}</span>` : ''}
-    </div>`;
-  }
-
-  $('content').innerHTML = `
-    <div class="card" style="margin-bottom:14px">
-      <div class="section-label" style="margin-bottom:12px">Directory tree</div>
-      <div class="tree">
-        ${tr('📁', 'lana_memory/', true, data.lana_memory_dir, 0)}
-        ${tr('📁', 'memory/', false, data.memory_files_dir, 1)}
-        ${tr('📁', 'chroma_db/', false, data.mem0_dir, 1)}
-        ${tr('🐍', 'lana_memory.py', false, '', 1)}
-        <div style="height:6px"></div>
-        ${tr('📁', '.hermes/profiles/lana/', true, data.profile_dir, 0)}
-        ${tr('📄', 'SOUL.md', false, '', 1)}
-        ${tr('⚙️', 'config.yaml', false, '', 1)}
-        ${tr('📄', 'memory_prefill.md', false, '', 1)}
-        <div style="height:6px"></div>
-        ${tr('📁', '.hermes/skills/', true, data.skills_dir, 0)}
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-label" style="margin-bottom:10px">Full paths</div>
-      <table class="path-table">
-        <tr><td>Memory files</td><td>${esc(data.memory_files_dir)}</td></tr>
-        <tr><td>Profile dir</td><td>${esc(data.profile_dir)}</td></tr>
-        <tr><td>Skills dir</td><td>${esc(data.skills_dir)}</td></tr>
-        <tr><td>Lana memory root</td><td>${esc(data.lana_memory_dir)}</td></tr>
-        <tr><td>Chroma DB</td><td>${esc(data.mem0_dir)}</td></tr>
-      </table>
-    </div>
-  `;
-}
-
-// ── Phase 1.5: Dreams ────────────────────────────────────────────────
-async function loadDreams() {
-  const data = await apiFetch('/api/dreams');
-  $('nc-dreams').textContent = data.count || 0;
-  setToolbar('Dreams', false, '');
-  if (!data.files || data.files.length === 0) {
-    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🌙</div><p>No dream files yet. Run <code>python dream_cycle.py --event "..."</code></p></div>`;
-    return;
-  }
-  let html = '<div class="file-list">';
-  for (const f of data.files) {
-    const dt = f.name.replace('dream_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
-    html += `<div class="file-item" onclick="openDream(${JSON.stringify(f.path)})">
-      <span class="file-icon">🌙</span>
-      <div class="file-info">
-        <div class="file-name">${esc(dt)}</div>
-        <div class="file-meta">${fsize(f.size)}</div>
-      </div>
-      <button class="sm danger" onclick="event.stopPropagation();deleteDreamFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
-    </div>`;
-  }
-  $('content').innerHTML = html + '</div>';
-}
-
-async function openDream(path) {
-  setLoading();
-  let data;
-  try { data = await apiFetch('/api/dreams/read?path=' + encodeURIComponent(path)); }
-  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadDreams'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadDreams'); return; }
-  const name = path.split('/').pop();
-  S.inEditor = true;
-  setToolbar(name, true, '');
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-async function deleteDreamFile(path) {
-  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
-  try {
-    await apiFetch('/api/dreams/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
-    toast('Deleted');
-    loadDreams();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ── Phase 1.5: Consolidations ─────────────────────────────────────────
-
-async function loadConsolidations() {
-  const data = await apiFetch('/api/consolidations');
-  $('nc-consolidations').textContent = data.count || 0;
-  setToolbar('Consolidations', false, '');
-  if (!data.files || data.files.length === 0) {
-    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🔬</div><p>No consolidation reports yet. Run <code>python consolidate_memory.py</code></p></div>`;
-    return;
-  }
-  let html = '<div class="file-list">';
-  for (const f of data.files) {
-    const dt = f.name.replace('consolidation_', '').replace('.md', '').replace(/_/g, ':').slice(0, 19);
-    html += `<div class="file-item" onclick="openConsolidation(${JSON.stringify(f.path)})">
-      <span class="file-icon">🔬</span>
-      <div class="file-info">
-        <div class="file-name">${esc(dt)}</div>
-        <div class="file-meta">${fsize(f.size)}</div>
-      </div>
-      <button class="sm danger" onclick="event.stopPropagation();deleteConsolidationFile(${JSON.stringify(f.path)})" title="Delete">🗑</button>
-    </div>`;
-  }
-  $('content').innerHTML = html + '</div>';
-}
-
-async function openConsolidation(path) {
-  setLoading();
-  let data;
-  try { data = await apiFetch('/api/consolidations/read?path=' + encodeURIComponent(path)); }
-  catch (e) { $('content').innerHTML = errorHtml(e.message, 'loadConsolidations'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadConsolidations'); return; }
-  const name = path.split('/').pop();
-  S.inEditor = true;
-  setToolbar(name, true, '');
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-async function deleteConsolidationFile(path) {
-  if (!confirm('Delete ' + path.split('/').pop() + '?')) return;
-  try {
-    await apiFetch('/api/consolidations/delete?path=' + encodeURIComponent(path), {method:'DELETE'});
-    toast('Deleted');
-    loadConsolidations();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ── Phase 1.5: Fallback ───────────────────────────────────────────────
-
-async function loadFallback() {
-  setToolbar('Fallback Memories', false,
-    `<button class="danger sm" onclick="clearFallback()">🗑 Clear All</button>`
-  );
-  let data;
-  try { data = await apiFetch('/api/fallback-memories'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadFallback'); return; }
-  $('nc-fallback').textContent = data.count || 0;
-  if (!data.memories || data.memories.length === 0) {
-    $('content').innerHTML = `<div class="empty-state"><div class="empty-icon">🛡️</div><p>No fallback memories. They appear when DeepSeek extraction is temporarily unavailable.</p></div>`;
-    return;
-  }
-  let html = '<div class="mem0-items">';
-  for (const m of data.memories) {
-    const id = m.id || '';
-    const text = m.memory || JSON.stringify(m);
-    const reason = m.reason ? `<span class="mem0-score" style="background:rgba(210,153,34,0.15);color:var(--orange)">${esc(m.reason)}</span>` : '';
-    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
-    html += `<div class="mem0-item">
-      <div class="mem0-text">${esc(text)}</div>
-      <div class="mem0-meta">
-        ${reason}
-        <span>${date}</span>
-        <span class="mem0-id">${id.slice(0,12)}</span>
-        <button class="sm danger" style="margin-left:auto" onclick="deleteFallbackMem('${id}')">🗑</button>
-      </div>
-    </div>`;
-  }
-  $('content').innerHTML = html + '</div>';
-}
-
-async function deleteFallbackMem(id) {
-  try {
-    await apiFetch('/api/fallback-memories/delete?memory_id=' + encodeURIComponent(id), {method:'DELETE'});
-    toast('Removed');
-    loadFallback();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function clearFallback() {
-  if (!confirm('Clear ALL fallback memories?')) return;
-  try {
-    await apiFetch('/api/fallback-memories/clear', {method:'DELETE'});
-    toast('Cleared');
-    loadFallback();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-// ── Phase 1.5: Timeline ───────────────────────────────────────────────
-
-async function loadTimeline() {
-  setToolbar('Timeline', false,
-    `<button class="primary sm" id="timeline-edit-btn" onclick="editTimeline()">✏️ Edit</button>`
-  );
-  let data;
-  try { data = await apiFetch('/api/timeline'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadTimeline'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadTimeline'); return; }
-  S._timelineContent = data.content;
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-function editTimeline() {
-  if (!S._timelineContent) return;
-  showEditor(String(TIMELINE_PATH || '/Users/fernandoserina/lana_memory/timeline.md'), 'timeline.md', S._timelineContent, async txt =>
-    apiFetch('/api/timeline/save', {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: txt})
-    })
-  );
-}
-const TIMELINE_PATH = '/Users/fernandoserina/lana_memory/timeline.md';
-
-// ── Phase 1.5: Inner State ────────────────────────────────────────────
-
-async function loadInnerState() {
-  setToolbar('Inner State', false,
-    `<button class="primary sm" id="inner-edit-btn" onclick="editInnerState()">✏️ Edit</button>`
-  );
-  let data;
-  try { data = await apiFetch('/api/inner-state'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadInnerState'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadInnerState'); return; }
-  S._innerStateContent = data.content;
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-function editInnerState() {
-  if (!S._innerStateContent) return;
-  showEditor('/Users/fernandoserina/lana_memory/inner_state.md', 'inner_state.md', S._innerStateContent, async txt =>
-    apiFetch('/api/inner-state/save', {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({content: txt})
-    })
-  );
-}
-
-// ── Phase 1.5: Roadmap ────────────────────────────────────────────────
-
-async function loadRoadmap() {
-  setToolbar('Roadmap', false, '');
-  let data;
-  try { data = await apiFetch('/api/roadmap'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadRoadmap'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadRoadmap'); return; }
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-
-// ── Phase 2: Proposed Memories (Approval-Gated) ────────────────────────
-
-const STATUS_FILTERS = ['proposed', 'approved', 'rejected', 'all'];
-S.proposedStatus = 'proposed';
-
-async function loadProposed() {
-  setToolbar('Proposed Memories', false,
-    `<select id="prop-status-filter" onchange="changeProposedFilter(this.value)" style="width:110px;font-size:12px">
-      ${STATUS_FILTERS.map(s => `<option value="${s}" ${s===S.proposedStatus?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
-    </select>
-    <button class="success sm" id="btn-approve-all" onclick="approveAllProposed()">✅ Approve All</button>
-    <button class="danger sm" id="btn-reject-all" onclick="rejectAllProposed()">❌ Reject All</button>
-    <button class="sm" style="color:var(--text2)" onclick="clearResolvedProposed()">🧹 Clear Resolved</button>`
-  );
-  await fetchProposed();
-}
-
-function changeProposedFilter(val) {
-  S.proposedStatus = val;
-  fetchProposed();
-}
-
-async function fetchProposed() {
-  let data;
-  try { data = await apiFetch('/api/proposed-memories?status=' + S.proposedStatus); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadProposed'); return; }
-
-  $('nc-proposed').textContent = data.counts ? data.counts.proposed : 0;
-
-  const mems = data.memories || [];
-  if (mems.length === 0) {
-    $('content').innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📋</div>
-      <p>${S.proposedStatus === 'proposed' ? 'No proposed memories pending review. Run dream_cycle.py or consolidate_memory.py to generate proposals.' : 'No ' + S.proposedStatus + ' memories.'}</p>
-    </div>`;
-    return;
-  }
-
-  let html = `<div style="display:flex;gap:12px;margin-bottom:12px;font-size:12px;color:var(--text2)">
-    <span>🟡 Proposed: ${data.counts.proposed}</span>
-    <span>🟢 Approved: ${data.counts.approved}</span>
-    <span>🔴 Rejected: ${data.counts.rejected}</span>
-  </div><div class="mem0-items">`;
-
-  for (const m of mems) {
-    const statusColor = m.status === 'approved' ? 'var(--green)' : m.status === 'rejected' ? 'var(--red)' : 'var(--orange)';
-    const statusIcon = m.status === 'approved' ? '✅' : m.status === 'rejected' ? '❌' : '🟡';
-    const date = m.created_at ? new Date(m.created_at).toLocaleString() : '';
-    const resolved = m.resolved_at ? ` · resolved ${new Date(m.resolved_at).toLocaleString()}` : '';
-    const typeBadge = m.type === 'dream' ? '🌙dream' : '🔬consolidation';
-
-    html += `<div class="mem0-item" style="border-left:3px solid ${statusColor}">
-      <div class="mem0-text">${esc(m.memory)}</div>
-      <div class="mem0-meta">
-        <span style="color:${statusColor}">${statusIcon} ${m.status}</span>
-        <span>${typeBadge}</span>
-        <span>${date}${resolved}</span>
-        <span class="mem0-id">${(m.id||'').slice(0,8)}</span>
-        <span style="font-size:10.5px;color:var(--text2)" title="${esc(m.source)}">${esc(m.source.slice(0,30))}</span>
-      </div>`;
-
-    if (m.status === 'proposed') {
-      html += `<div style="display:flex;gap:6px;margin-top:8px">
-        <button class="success sm" onclick="approveProposed('${m.id}')">✅ Approve</button>
-        <button class="danger sm" onclick="rejectProposed('${m.id}')">❌ Reject</button>
-      </div>`;
-    }
-
-    html += `</div>`;
-  }
-
-  $('content').innerHTML = html + '</div>';
-
-  // Hide batch buttons if no proposed items in view
-  const hasProposed = mems.some(m => m.status === 'proposed');
-  const btnAll = $('btn-approve-all');
-  const btnRej = $('btn-reject-all');
-  if (btnAll) btnAll.style.display = hasProposed ? '' : 'none';
-  if (btnRej) btnRej.style.display = hasProposed ? '' : 'none';
-}
-
-async function approveProposed(id) {
-  try {
-    const data = await apiFetch('/api/proposed-memories/approve', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({memory_id: id})
-    });
-    if (data.error) { toast(data.error, 'error'); return; }
-    toast('✅ Approved & saved to Mem0!');
-    fetchProposed();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function rejectProposed(id) {
-  try {
-    const data = await apiFetch('/api/proposed-memories/reject', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({memory_id: id})
-    });
-    if (data.error) { toast(data.error, 'error'); return; }
-    toast('❌ Rejected');
-    fetchProposed();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function approveAllProposed() {
-  if (!confirm('Approve ALL proposed memories? Each will be saved to Mem0.')) return;
-  try {
-    const data = await apiFetch('/api/proposed-memories/approve-all', {method:'POST'});
-    toast(`✅ Approved ${data.approved_count} memories!`);
-    fetchProposed();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function rejectAllProposed() {
-  if (!confirm('Reject ALL proposed memories?')) return;
-  try {
-    const data = await apiFetch('/api/proposed-memories/reject-all', {method:'POST'});
-    toast(`❌ Rejected ${data.rejected_count} memories`);
-    fetchProposed();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-async function clearResolvedProposed() {
-  if (!confirm('Remove all approved/rejected entries, keeping only proposed?')) return;
-  try {
-    await apiFetch('/api/proposed-memories/clear-resolved', {method:'DELETE'});
-    toast('Cleaned up!');
-    fetchProposed();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-
-// ── Phase 5: Content & Embodiment ────────────────────────────────────
-
-async function loadContent() {
-  setToolbar('Content Studio', false,
-    `<select id="content-subtab" onchange="switchContentSubtab(this.value)" style="width:150px;font-size:12px">
-      <option value="gallery">🖼️ Gallery</option>
-      <option value="references">🧬 References</option>
-      <option value="visual">🎨 Visual Identity</option>
-      <option value="strategy">📋 Strategy</option>
-      <option value="voice">🎤 Voice Guide</option>
-      <option value="generate">✨ Generate Prompt</option>
-    </select>`
-  );
-  await switchContentSubtab('gallery');
-}
-
-async function switchContentSubtab(sub) {
-  S.contentSubtab = sub;
-  $('content-subtab').value = sub;
-  if (sub === 'gallery')     await showContentGallery();
-  else if (sub === 'references') await showReferenceLibrary();
-  else if (sub === 'visual') await showVisualIdentity();
-  else if (sub === 'strategy') await showContentStrategy();
-  else if (sub === 'voice')  await showVoiceGuide();
-  else if (sub === 'generate') await showPromptGenerator();
-}
-
-async function showContentGallery() {
-  let data;
-  try { data = await apiFetch('/api/content-catalog'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
-
-  $('nc-content').textContent = data.image_count || 0;
-
-  let html = `<div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
-    <span>🖼️ ${data.image_count} images</span>
-    <span>✅ ${data.passed_count} passed QC</span>
-    ${data.has_visual_identity ? '<span>🎨 Visual Identity ✓</span>' : '<span style="color:var(--red)">🎨 Visual Identity missing</span>'}
-    ${data.has_content_strategy ? '<span>📋 Strategy ✓</span>' : '<span style="color:var(--red)">📋 Strategy missing</span>'}
-    ${data.has_voice_guide ? '<span>🎤 Voice Guide ✓</span>' : '<span style="color:var(--red)">🎤 Voice Guide missing</span>'}
-  </div>`;
-
-  if (!data.images || data.images.length === 0) {
-    html += `<div class="empty-state">
-      <div class="empty-icon">📸</div>
-      <p>No images generated yet. Use Higgsfield or the Generate tab to create Lana's first photos.</p>
-    </div>`;
-  } else {
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">`;
-    for (const img of data.images) {
-      const status = img.passed_qc ? '✅' : '❌';
-      const cat = img.category || 'unknown';
-      const brief = (img.brief || '').slice(0, 60);
-      const date = img.created_at ? new Date(img.created_at).toLocaleDateString() : '';
-      const imgUrl = `/api/images/${img.filename}`;
-      html += `<div class="card" style="padding:12px">
-        <div style="position:relative;margin-bottom:8px;background:var(--surface3);border-radius:4px;overflow:hidden;cursor:pointer" onclick="viewFullImage('${imgUrl}')">
-          <img src="${imgUrl}" alt="${esc(img.filename)}" loading="lazy"
-               style="width:100%;height:300px;object-fit:cover;display:block"
-               onerror="this.parentElement.innerHTML='<div style=\\'padding:60px 20px;text-align:center;color:var(--text2)\\'><div style=\\'font-size:32px\\'>🖼️</div><div style=\\'font-size:11px;margin-top:8px\\'>Image not found</div></div>'">
-        </div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:3px">${status} ${cat} · ${date}</div>
-        <div style="font-size:12px;margin-bottom:2px;word-break:break-word">${esc(img.filename)}</div>
-        ${brief ? `<div style="font-size:11px;color:var(--text2)">${esc(brief)}</div>` : ''}
-        ${img.qc_notes ? `<div style="font-size:10px;color:var(--orange);margin-top:4px">${esc(img.qc_notes)}</div>` : ''}
-        <div style="margin-top:8px;display:flex;gap:4px">
-          <button class="sm success" onclick="qcImage('${img.filename}',true)">✅ Pass</button>
-          <button class="sm danger" onclick="qcImage('${img.filename}',false)">❌ Fail</button>
-        </div>
-      </div>`;
-    }
-    html += `</div>`;
-  }
-  $('content').innerHTML = html;
-}
-
-async function qcImage(filename, passed) {
-  const notes = passed ? 'QC passed' : prompt('Rejection reason?');
-  if (!passed && !notes) return;
-  try {
-    await apiFetch('/api/content/qc-update', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({filename, passed_qc: passed, qc_notes: notes || 'QC passed'})
-    });
-    toast(passed ? '✅ QC passed' : '❌ QC failed');
-    showContentGallery();
-  } catch(e) { toast(e.message, 'error'); }
-}
-
-function viewFullImage(url) {
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
-  overlay.onclick = () => overlay.remove();
-  const img = document.createElement('img');
-  img.src = url;
-  img.style.cssText = 'max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px;box-shadow:0 0 40px rgba(0,0,0,0.5)';
-  overlay.appendChild(img);
-  document.body.appendChild(overlay);
-  // Close on Escape
-  const onKey = (e) => { if (e.key === 'Escape') { overlay.remove(); document.removeEventListener('keydown', onKey); }};
-  document.addEventListener('keydown', onKey);
-}
-
-async function showReferenceLibrary() {
-  let data;
-  try { data = await apiFetch('/api/identity-references'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
-
-  $('nc-content').textContent = data.count || 0;
-  const directory = data.directory || '/Users/fernandoserina/.hermes/profiles/lana/home/lana-identity-references';
-  let html = `
-    <div class="card" style="margin-bottom:16px">
-      <div class="section-label">Active Reference Folder</div>
-      <div style="font-family:var(--mono);font-size:12px;color:var(--text2);word-break:break-all;margin-bottom:12px">${esc(directory)}</div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="ref-upload-input" type="file" accept="image/png,image/jpeg,image/webp" multiple style="max-width:380px">
-        <button class="primary sm" id="ref-upload-btn" onclick="uploadReferenceImages()">➕ Add Pictures</button>
-        <button class="sm" onclick="showReferenceLibrary()">↻ Refresh</button>
-      </div>
-      <div style="font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.5">
-        Add/remove pictures Lana can use as active identity references. Remove archives the file under <code>invalid/</code> instead of deleting it forever.
-      </div>
-    </div>
-    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:12px;color:var(--text2)">
-      <span>🧬 ${data.count || 0} active references</span>
-      <span>✅ Valid files only: PNG/JPG/JPEG/WEBP</span>
-    </div>`;
-
-  if (!data.images || data.images.length === 0) {
-    html += `<div class="empty-state"><div class="empty-icon">🧬</div><p>No active reference images found.</p></div>`;
-  } else {
-    html += `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px">`;
-    for (const ref of data.images) {
-      const date = ref.modified_at ? new Date(ref.modified_at).toLocaleString() : '';
-      html += `<div class="card" style="padding:12px">
-        <div style="position:relative;margin-bottom:8px;background:var(--surface3);border-radius:4px;overflow:hidden;cursor:pointer" onclick="viewFullImage('${ref.url}')">
-          <img src="${ref.url}" alt="${esc(ref.filename)}" loading="lazy"
-               style="width:100%;height:240px;object-fit:cover;display:block"
-               onerror="this.parentElement.innerHTML='<div style=\\'padding:60px 20px;text-align:center;color:var(--text2)\\'><div style=\\'font-size:32px\\'>🧬</div><div style=\\'font-size:11px;margin-top:8px\\'>Reference not found</div></div>'">
-        </div>
-        <div style="font-size:12px;margin-bottom:3px;word-break:break-word">${esc(ref.filename)}</div>
-        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">${fsize(ref.size)}${date ? ' · ' + esc(date) : ''}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="sm" onclick="event.stopPropagation(); navigator.clipboard.writeText('${esc(ref.filename)}').then(()=>toast('Filename copied'))">📋 Copy name</button>
-          <button class="sm danger" onclick="event.stopPropagation(); removeReferenceImage('${esc(ref.filename)}')">🗄️ Remove</button>
-        </div>
-      </div>`;
-    }
-    html += `</div>`;
-  }
-  $('content').innerHTML = html;
-}
-
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error || new Error('Could not read file'));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function uploadReferenceImages() {
-  const input = $('ref-upload-input');
-  const btn = $('ref-upload-btn');
-  if (!input || !input.files || input.files.length === 0) { toast('Choose image files first', 'error'); return; }
-  btn.disabled = true;
-  btn.textContent = 'Uploading…';
-  let uploaded = 0;
-  try {
-    for (const file of input.files) {
-      if (!file.type.startsWith('image/')) throw new Error(file.name + ' is not an image');
-      const dataUrl = await readFileAsDataURL(file);
-      const res = await apiFetch('/api/identity-references/upload', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({filename: file.name, data_url: dataUrl})
-      });
-      if (res.error) throw new Error(res.error);
-      uploaded++;
-    }
-    toast(`Uploaded ${uploaded} reference${uploaded === 1 ? '' : 's'}`);
-    await showReferenceLibrary();
-  } catch(e) {
-    toast('Upload failed: ' + e.message, 'error');
-  }
-  btn.disabled = false;
-  btn.textContent = '➕ Add Pictures';
-}
-
-async function removeReferenceImage(filename) {
-  if (!confirm(`Remove ${filename} from Lana's active reference library?\n\nIt will be archived under invalid/, not permanently deleted.`)) return;
-  try {
-    const res = await apiFetch('/api/identity-references/' + encodeURIComponent(filename), {method:'DELETE'});
-    if (res.error) { toast(res.error, 'error'); return; }
-    toast('Archived ' + filename);
-    await showReferenceLibrary();
-  } catch(e) {
-    toast('Remove failed: ' + e.message, 'error');
-  }
-}
-
-async function showVisualIdentity() {
-  let data;
-  try { data = await apiFetch('/api/content/visual-identity'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-async function showContentStrategy() {
-  let data;
-  try { data = await apiFetch('/api/content/content-strategy'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-async function showVoiceGuide() {
-  let data;
-  try { data = await apiFetch('/api/content/voice-guide'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadContent'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadContent'); return; }
-  $('content').innerHTML = `<div class="card"><pre style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;line-height:1.6;overflow-x:auto">${esc(data.content)}</pre></div>`;
-}
-
-async function showPromptGenerator() {
-  $('content').innerHTML = `
-    <div class="card" style="margin-bottom:16px">
-      <div class="section-label" style="margin-bottom:10px">Generate Image Prompt</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <select id="gen-category" style="width:140px">
-          <option value="casual">Casual Everyday</option>
-          <option value="cosy">Cosy at Home</option>
-          <option value="going_out">Going Out / Content</option>
-          <option value="coastal">Coastal Irish</option>
-        </select>
-        <input id="gen-brief" placeholder="Scene: gaming with tea..." style="flex:1;min-width:200px">
-      </div>
-      <button class="primary sm" onclick="doGeneratePrompt()">✨ Generate Prompt</button>
-      <button class="sm" style="margin-left:8px" onclick="copyPrompt()">📋 Copy</button>
-    </div>
-    <div class="card">
-      <div class="section-label" style="margin-bottom:8px">Generated Prompt</div>
-      <pre id="gen-output" style="font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;line-height:1.5;color:var(--text2)">Click Generate to create a prompt...</pre>
-    </div>
-  `;
-  S._lastPrompt = '';
-}
-
-async function doGeneratePrompt() {
-  const cat = $('gen-category').value;
-  const brief = $('gen-brief').value;
-  const out = $('gen-output');
-  out.textContent = 'Generating...';
-  try {
-    const data = await apiFetch('/api/content/generate-prompt?category=' + cat + '&brief=' + encodeURIComponent(brief));
-    if (data.error) { out.textContent = 'Error: ' + data.error; return; }
-    S._lastPrompt = data.prompt;
-    out.textContent = data.prompt;
-  } catch(e) { out.textContent = 'Error: ' + e.message; }
-}
-
-function copyPrompt() {
-  if (!S._lastPrompt) { toast('Generate a prompt first', 'error'); return; }
-  navigator.clipboard.writeText(S._lastPrompt).then(() => toast('Copied!'));
-}
-
-
-// ── Manual ────────────────────────────────────────────────────
-
-async function loadManual() {
-  setToolbar('📖 Lana System Manual', false, '');
-  let data;
-  try { data = await apiFetch('/api/manual'); }
-  catch(e) { $('content').innerHTML = errorHtml(e.message, 'loadManual'); return; }
-  if (data.error) { $('content').innerHTML = errorHtml(data.error, 'loadManual'); return; }
-
-  const html = renderMarkdown(data.content);
-  $('content').innerHTML = `<div class="card" style="padding:24px 32px;max-width:900px">
-    <div style="font-size:10px;color:var(--text2);margin-bottom:12px">
-      ${esc(data.path)} · ${(data.size / 1024).toFixed(1)} KB
-    </div>
-    <div class="manual-content">${html}</div>
-  </div>`;
-}
-
-function renderMarkdown(md) {
-  let html = esc(md);
-  // Headings
-  html = html.replace(/^#### (.+)$/gm, '<h4 style="font-size:13px;font-weight:700;margin:16px 0 4px;color:var(--purple)">$1</h4>');
-  html = html.replace(/^### (.+)$/gm, '<h3 style="font-size:15px;font-weight:700;margin:20px 0 6px;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:4px">$1</h3>');
-  html = html.replace(/^## (.+)$/gm, '<h2 style="font-size:18px;font-weight:700;margin:28px 0 10px;color:var(--text)">$1</h2>');
-  html = html.replace(/^# (.+)$/gm, '<h1 style="font-size:22px;font-weight:800;margin:32px 0 12px;color:var(--text);letter-spacing:-0.3px">$1</h1>');
-  // Bold / italic
-  html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code style="background:var(--surface3);padding:1px 5px;border-radius:3px;font-family:var(--mono);font-size:12px">$1</code>');
-  // Code blocks
-  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre style="background:var(--surface3);padding:12px 16px;border-radius:var(--radius);overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.5;margin:12px 0;border:1px solid var(--border)">$2</pre>');
-  // Horizontal rules
-  html = html.replace(/^---$/gm, '<hr style="border:none;border-top:1px solid var(--border);margin:24px 0">');
-  // Tables
-  html = html.replace(/^\|(.+)\|$/gm, function(m) {
-    const cells = m.split('|').filter(c => c.trim()).map(c => c.trim());
-    if (cells.every(c => /^[-:]+$/.test(c))) return '<!-- sep -->';
-    const isHeader = m.includes('---');
-    const tag = isHeader ? 'th' : 'td';
-    return '<tr>' + cells.map(c => `<${tag} style="padding:4px 12px;border:1px solid var(--border);text-align:left;font-size:12px">${c}</${tag}>`).join('') + '</tr>';
-  });
-  // Wrap table rows
-  html = html.replace(/(<tr>[\s\S]*?<\/tr>)\n(?=<tr>)/g, '$1');
-  html = html.replace(/((?:<tr>[\s\S]*?<\/tr>\n?)+)/g, '<table style="border-collapse:collapse;margin:12px 0;width:100%">$1</table>');
-  // Lists
-  html = html.replace(/^- (.+)$/gm, '<li style="margin:2px 0 2px 20px;font-size:13px">$1</li>');
-  html = html.replace(/((?:<li[^>]*>[\s\S]*?<\/li>\n?)+)/g, '<ul style="margin:8px 0">$1</ul>');
-  // Paragraphs (double newlines)
-  html = html.replace(/\n\n/g, '</p><p style="margin:8px 0;font-size:13px;line-height:1.6">');
-  html = '<p style="margin:8px 0;font-size:13px;line-height:1.6">' + html + '</p>';
-  // Clean up empty paragraphs
-  html = html.replace(/<p[^>]*><\/p>/g, '');
-  html = html.replace(/<p[^>]*>\s*<\/p>/g, '');
-  // Clean up separator comments
-  html = html.replace(/<!-- sep -->/g, '');
-
-  return html;
-}
-
 
 // ── Init ──────────────────────────────────────────────────────
-loadTab('skills');
-</script>
-</body>
-</html>
+  1755|loadTab('skills');
+  1756|</script>
+  1757|</body>
+  1758|</html>
+  1759|

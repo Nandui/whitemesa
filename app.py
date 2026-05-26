@@ -762,7 +762,127 @@ def browse_dir(path: str = Query(...)):
     return {"items": items, "path": str(p)}
 
 
-# ── Frontend ──────────────────────────────────────────────────────────
+# ── Life State (Lana Life V1) ─────────────────────────────────────────
+
+LIFE_PY = LANA_MEMORY / "lana_life.py"
+VENV_PYTHON_LIFE = LANA_MEMORY / ".venv" / "bin" / "python3"
+DAY_STATE_FILE = LANA_MEMORY / "day_state.json"
+LIFE_EVENTS_FILE = LANA_MEMORY / "life_events.jsonl"
+SCENE_LEDGER_FILE = LANA_MEMORY / "scene_ledger.json"
+
+
+def _run_life(args: list[str], timeout: int = 15) -> dict:
+    """Run lana_life.py with given args and return parsed output."""
+    if not VENV_PYTHON_LIFE.exists():
+        return {"error": "lana_life.py venv not found"}
+    cmd = [str(VENV_PYTHON_LIFE), str(LIFE_PY)] + args
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=str(LANA_MEMORY))
+        if result.returncode != 0:
+            return {"error": result.stderr.strip() or result.stdout.strip()}
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return {"output": result.stdout.strip()}
+    except subprocess.TimeoutExpired:
+        return {"error": "Timed out"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/life/state")
+def get_life_state():
+    """Get current day_state.json."""
+    if not DAY_STATE_FILE.exists():
+        return {"error": "day_state.json not found"}
+    try:
+        return json.loads(DAY_STATE_FILE.read_text())
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.put("/api/life/state")
+def update_life_state(data: SaveRequest = Body(...)):
+    """Replace entire day_state.json."""
+    return write_file_safe(DAY_STATE_FILE, data.content)
+
+
+@app.post("/api/life/tick")
+def life_tick():
+    """Run a state tick (advance time band, energy, focus)."""
+    return _run_life(["tick"])
+
+
+@app.get("/api/life/events")
+def get_life_events(limit: int = Query(20)):
+    """Get recent life events from life_events.jsonl."""
+    if not LIFE_EVENTS_FILE.exists():
+        return {"events": [], "count": 0}
+    try:
+        lines = [l for l in LIFE_EVENTS_FILE.read_text().splitlines() if l.strip()]
+        events = []
+        for l in lines:
+            try:
+                events.append(json.loads(l))
+            except json.JSONDecodeError:
+                continue
+        return {"events": events[-limit:], "count": len(events)}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+class LifeEventRequest(BaseModel):
+    type: str = "conversation_moment"
+    summary: str
+    source: str = "whitemesa"
+    mood: str = ""
+    focus: str = ""
+    desire: str = ""
+
+
+@app.post("/api/life/events")
+def add_life_event(req: LifeEventRequest):
+    """Append a life event."""
+    args = ["event", "--summary", req.summary, "--type", req.type, "--source", req.source]
+    if req.mood:
+        args += ["--mood", req.mood]
+    if req.focus:
+        args += ["--focus", req.focus]
+    if req.desire:
+        args += ["--desire", req.desire]
+    return _run_life(args)
+
+
+@app.get("/api/life/scenes")
+def get_scenes():
+    """Get scene ledger."""
+    if not SCENE_LEDGER_FILE.exists():
+        return {"scenes": [], "active_scene_id": None}
+    try:
+        return json.loads(SCENE_LEDGER_FILE.read_text())
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.put("/api/life/scenes")
+def update_scenes(data: SaveRequest = Body(...)):
+    """Replace scene ledger."""
+    return write_file_safe(SCENE_LEDGER_FILE, data.content)
+
+
+@app.post("/api/life/scenes/active")
+def set_active_scene(scene_id: str = Query("")):
+    """Set the active scene."""
+    return _run_life(["scene-active", "--id", scene_id])
+
+
+@app.post("/api/life/set")
+def life_set_field(field: str = Query(""), value: str = Query("")):
+    """Set a single field in day_state.json."""
+    return _run_life(["set", "--field", field, "--value", value])
+
+
+# ── Main ──────────────────────────────────────────────────────────────
 
 @app.get("/")
 def index():
